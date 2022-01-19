@@ -10941,6 +10941,8 @@ static void disas_a64_insn(CPUARMState *env, DisasContext *s)
         return;
     }
 
+    FW_ASSERT_NOT_REACHED("Not supported right now\n");
+
     insn = arm_ldl_code(env, s->pc, s->bswap_code);
     s->insn = insn;
     s->pc += 4;

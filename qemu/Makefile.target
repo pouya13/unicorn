@@ -19,7 +19,7 @@ all: $(QEMU_PROG)
 
 #########################################################
 # cpu emulator library
-obj-y = exec.o translate-all.o cpu-exec.o
+obj-y = exec.o translate-all.o cpu-exec.o fuzzer/cov.o fuzzer/log.o
 obj-y += tcg/tcg.o tcg/optimize.o
 obj-y += fpu/softfloat.o
 obj-y += target-$(TARGET_BASE_ARCH)/

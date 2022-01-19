@@ -1503,6 +1503,7 @@ static int x86_cpus_init(struct uc_struct *uc, const char *cpu_model)
 DEFAULT_VISIBILITY
 void x86_uc_init(struct uc_struct* uc)
 {
+    uc->reg_ptr = NULL;
     uc->reg_read = x86_reg_read;
     uc->reg_write = x86_reg_write;
     uc->reg_reset = x86_reg_reset;

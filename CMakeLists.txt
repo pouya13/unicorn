@@ -997,4 +997,6 @@ Libs: -L\$\{libdir\} -lunicorn\n\
 Cflags: -I\$\{includedir\}\n"
     )
     install(FILES ${CMAKE_BINARY_DIR}/unicorn.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+else()
+    install(TARGETS unicorn ${UNICORN_LINK_LIBRARIES})
 endif()

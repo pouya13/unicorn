@@ -36,6 +36,20 @@ static inline void gen_uc_tracecode(TCGContext *tcg_ctx, int32_t size, int32_t t
     gen_helper_uc_tracecode(tcg_ctx, tsize, ttype, tuc, tpc);
 }
 
+static inline void gen_uc_tracecode_block(TCGContext *tcg_ctx, void *uc, uint64_t pc)
+{
+    TCGv_ptr tuc = tcg_const_ptr(tcg_ctx, uc);
+    TCGv_i64 tpc = tcg_const_i64(tcg_ctx, pc);
+    gen_helper_uc_tracecode_block(tcg_ctx, tuc, tpc);
+}
+
+static inline void gen_uc_unconditional_block(TCGContext *tcg_ctx, void *uc, uint64_t pc)
+{
+    TCGv_ptr tuc = tcg_const_ptr(tcg_ctx, uc);
+    TCGv_i64 tpc = tcg_const_i64(tcg_ctx, pc);
+    gen_helper_uc_unconditional_block(tcg_ctx, tuc, tpc);
+}
+
 static inline void tcg_gen_op0(TCGContext *s, TCGOpcode opc)
 {
     *s->gen_opc_ptr++ = opc;

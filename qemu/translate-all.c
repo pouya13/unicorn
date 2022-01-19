@@ -63,6 +63,9 @@
 
 #include "uc_priv.h"
 
+#include "tcg-op.h"
+#include "fuzzer/cov.h"
+
 //#define DEBUG_TB_INVALIDATE
 //#define DEBUG_FLUSH
 /* make various TB consistency checks */
@@ -159,6 +162,56 @@ static void tb_clean_internal(void **p, int x)
     }
 }
 
+/*
+Based on https://abiondo.me/2018/09/21/improving-afl-qemu-mode/
+Inserts AFL instrumentation code into the current TB.
+*/
+static void afl_add_instrumentation(TCGContext *ctx, target_ulong cur_loc) {
+    TCGv_i32 index, count, new_prev_loc;
+    TCGv_ptr prev_loc_ptr, count_ptr;
+
+    if (unlikely(cov_area_ptr == NULL))
+        return;
+
+    cur_loc  = (cur_loc >> 4) ^ (cur_loc << 8);
+    cur_loc &= cov_area_size - 1;
+
+    if (cur_loc >= cov_area_size)
+        return;
+
+    /* index = prev_loc ^ cur_loc */
+    prev_loc_ptr = tcg_const_ptr(ctx, &cov_prev_loc);
+    index = tcg_temp_new_i32(ctx);
+    tcg_gen_ld_i32(ctx, index, prev_loc_ptr, 0);
+    tcg_gen_xori_i32(ctx, index, index, cur_loc);
+
+    /* cov_area_ptr[index]++ */
+    count_ptr = tcg_const_ptr(ctx, cov_area_ptr);
+    tcg_gen_add_ptr(ctx, count_ptr, count_ptr, MAKE_TCGV_PTR(GET_TCGV_I32(index)));
+    tcg_temp_free_i32(ctx, index);
+    count = tcg_temp_new_i32(ctx);
+    tcg_gen_ld8u_i32(ctx, count, count_ptr, 0);
+    tcg_gen_addi_i32(ctx, count, count, 1);
+    tcg_gen_st8_i32(ctx, count, count_ptr, 0);
+    tcg_temp_free_i32(ctx, count);
+
+    /* prev_loc = cur_loc >> 1 */
+    new_prev_loc = tcg_const_i32(ctx, cur_loc >> 1);
+    tcg_gen_st_i32(ctx, new_prev_loc, prev_loc_ptr, 0);
+}
+
+static uint64_t sdbm(uint8_t *data, size_t len)
+{
+    uint64_t hash = 0;
+
+    while (len--) {
+        hash = *data + (hash << 6) + (hash << 16) - hash;
+        data++;
+    }
+
+    return hash;
+}
+
 void tb_cleanup(struct uc_struct *uc)
 {
     int i, x;
@@ -210,15 +263,8 @@ static int cpu_gen_code(CPUArchState *env, TranslationBlock *tb, int *gen_code_s
 #endif
     tcg_func_start(s);
 
+    afl_add_instrumentation(s, tb->pc);
     gen_intermediate_code(env, tb);
-
-    // Unicorn: when tracing block, patch block size operand for callback
-    if (env->uc->size_arg != -1 && HOOK_EXISTS_BOUNDED(env->uc, UC_HOOK_BLOCK, tb->pc)) {
-        if (env->uc->block_full)    // block size is unknown
-            *(s->gen_opparam_buf + env->uc->size_arg) = 0;
-        else
-            *(s->gen_opparam_buf + env->uc->size_arg) = tb->size;
-    }
 
     /* generate machine code */
     gen_code_buf = tb->tc_ptr;
@@ -242,6 +288,10 @@ static int cpu_gen_code(CPUArchState *env, TranslationBlock *tb, int *gen_code_s
     if (gen_code_size == -1) {
         return -1;
     }
+
+    /* Hash the generated code and store it into the TB */
+    tb->tc_hash = sdbm(gen_code_buf, gen_code_size);
+
     //printf(">>> code size = %u: ", gen_code_size);
     //int i;
     //for (i = 0; i < gen_code_size; i++) {

@@ -157,6 +157,7 @@ DEFAULT_VISIBILITY
   void ppc_uc_init(struct uc_struct* uc)
 #endif
 {
+    uc->reg_ptr = NULL;
     uc->reg_read = ppc_reg_read;
     uc->reg_write = ppc_reg_write;
     uc->reg_reset = ppc_reg_reset;

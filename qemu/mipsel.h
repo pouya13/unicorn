@@ -1,6 +1,12 @@
 /* Autogen header for Unicorn Engine - DONOT MODIFY */
 #ifndef UNICORN_AUTOGEN_MIPSEL_H
 #define UNICORN_AUTOGEN_MIPSEL_H
+#define fuzzer_init_cov fuzzer_init_cov_mipsel
+#define fuzzer_reset_cov fuzzer_reset_cov_mipsel
+#define cov_prev_loc cov_prev_loc_mipsel
+#define cov_area_ptr cov_area_ptr_mipsel
+#define cov_area_size cov_area_size_mipsel
+#define fw_log fw_log_mipsel
 #define arm_release arm_release_mipsel
 #define aarch64_tb_set_jmp_target aarch64_tb_set_jmp_target_mipsel
 #define ppc_tb_set_jmp_target ppc_tb_set_jmp_target_mipsel
@@ -67,6 +73,7 @@
 #define address_space_map address_space_map_mipsel
 #define address_space_read address_space_read_mipsel
 #define address_space_rw address_space_rw_mipsel
+#define address_space_memset address_space_memset_mipsel
 #define address_space_translate address_space_translate_mipsel
 #define address_space_translate_for_iotlb address_space_translate_for_iotlb_mipsel
 #define address_space_translate_internal address_space_translate_internal_mipsel
@@ -134,6 +141,7 @@
 #define arm_lduw_code arm_lduw_code_mipsel
 #define arm_log_exception arm_log_exception_mipsel
 #define arm_reg_read arm_reg_read_mipsel
+#define arm_reg_ptr arm_reg_ptr_mipsel
 #define arm_reg_reset arm_reg_reset_mipsel
 #define arm_reg_write arm_reg_write_mipsel
 #define restore_state_to_opc restore_state_to_opc_mipsel

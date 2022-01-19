@@ -550,7 +550,7 @@ class Uc(object):
                 ctypes.c_uint64(begin), ctypes.c_uint64(end)
             )
         else:
-            if htype in (uc.UC_HOOK_BLOCK, uc.UC_HOOK_CODE):
+            if htype in (uc.UC_HOOK_BLOCK, uc.UC_HOOK_CODE, uc.UC_HOOK_BLOCK_UNCONDITIONAL):
                 # set callback with wrapper, so it can be called
                 # with this object as param
                 cb = ctypes.cast(UC_HOOK_CODE_CB(self._hookcode_cb), UC_HOOK_CODE_CB)

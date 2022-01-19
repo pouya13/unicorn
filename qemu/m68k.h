@@ -1,6 +1,12 @@
 /* Autogen header for Unicorn Engine - DONOT MODIFY */
 #ifndef UNICORN_AUTOGEN_M68K_H
 #define UNICORN_AUTOGEN_M68K_H
+#define fuzzer_init_cov fuzzer_init_cov_m68k
+#define fuzzer_reset_cov fuzzer_reset_cov_m68k
+#define cov_prev_loc cov_prev_loc_m68k
+#define cov_area_ptr cov_area_ptr_m68k
+#define cov_area_size cov_area_size_m68k
+#define fw_log fw_log_m68k
 #define arm_release arm_release_m68k
 #define aarch64_tb_set_jmp_target aarch64_tb_set_jmp_target_m68k
 #define ppc_tb_set_jmp_target ppc_tb_set_jmp_target_m68k
@@ -67,6 +73,7 @@
 #define address_space_map address_space_map_m68k
 #define address_space_read address_space_read_m68k
 #define address_space_rw address_space_rw_m68k
+#define address_space_memset address_space_memset_m68k
 #define address_space_translate address_space_translate_m68k
 #define address_space_translate_for_iotlb address_space_translate_for_iotlb_m68k
 #define address_space_translate_internal address_space_translate_internal_m68k
@@ -134,6 +141,7 @@
 #define arm_lduw_code arm_lduw_code_m68k
 #define arm_log_exception arm_log_exception_m68k
 #define arm_reg_read arm_reg_read_m68k
+#define arm_reg_ptr arm_reg_ptr_m68k
 #define arm_reg_reset arm_reg_reset_m68k
 #define arm_reg_write arm_reg_write_m68k
 #define restore_state_to_opc restore_state_to_opc_m68k

@@ -7,6 +7,12 @@
 import sys
 
 symbols = (
+    'fuzzer_init_cov',
+    'fuzzer_reset_cov',
+    'cov_prev_loc',
+    'cov_area_ptr',
+    'cov_area_size',
+    'fw_log',
     'arm_release',
     'aarch64_tb_set_jmp_target',
     'ppc_tb_set_jmp_target',
@@ -73,6 +79,7 @@ symbols = (
     'address_space_map',
     'address_space_read',
     'address_space_rw',
+    'address_space_memset',
     'address_space_translate',
     'address_space_translate_for_iotlb',
     'address_space_translate_internal',
@@ -140,6 +147,7 @@ symbols = (
     'arm_lduw_code',
     'arm_log_exception',
     'arm_reg_read',
+    'arm_reg_ptr',
     'arm_reg_reset',
     'arm_reg_write',
     'restore_state_to_opc',

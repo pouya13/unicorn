@@ -1,23 +1,13 @@
-use std::{
-    env,
-    process::Command,
-};
-
-use build_helper::rustc::{link_lib, link_search};
-
 fn main() {
-    println!("cargo:rerun-if-changed=unicorn");
-    let out_dir = env::var("OUT_DIR").unwrap();
-    let unicorn = "libunicorn.a";
-        let _ = Command::new("cp")
-            .current_dir("../..")
-            .arg(&unicorn)
-            .arg(&out_dir)
-            .status()
-            .unwrap();
-    link_search(
-        Some(build_helper::SearchKind::Native),
-            build_helper::out_dir());
-    link_lib(Some(build_helper::LibKind::Static), "unicorn");
-}
+    let dst = cmake::Config::new("../../")
+        .define("UNICORN_ARCH", "arm")
+        .define("UNICORN_BUILD_SHARED", "OFF")
+        .define("UNICORN_STATIC_MSVCRT", "OFF")
+        .cflag("-DFUZZWARE_FUZZING_STUBS")
+        .build();
 
+    println!("cargo:rustc-link-search=native={}/lib", dst.display());
+    println!("cargo:rustc-link-lib=static=unicorn");
+    println!("cargo:rustc-link-lib=static=arm-softmmu");
+    println!("cargo:rustc-link-lib=static=armeb-softmmu");
+}

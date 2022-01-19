@@ -135,7 +135,7 @@ static bool tcg_exec_all(struct uc_struct* uc)
             r = tcg_cpu_exec(uc, env);
 
             // quit current TB but continue emulating?
-            if (uc->quit_request) {
+            if (uc->quit_request && (uc->emulation_done != true)) {
                 // reset stop_request
                 uc->stop_request = false;
             } else if (uc->stop_request) {

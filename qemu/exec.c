@@ -606,6 +606,9 @@ static void tlb_reset_dirty_range_all(struct uc_struct* uc,
 
     block = qemu_get_ram_block(uc, start);
     assert(block == qemu_get_ram_block(uc, end - 1));
+
+    ((void)(end)); // unused
+
     start1 = (uintptr_t)block->host + (start - block->offset);
     cpu_tlb_reset_dirty_all(uc, start1, length);
 }
@@ -1320,6 +1323,36 @@ static int memory_access_size(MemoryRegion *mr, unsigned l, hwaddr addr)
     return l;
 }
 
+bool address_space_memset(AddressSpace *as, hwaddr addr, uint8_t memset_val, int len) {
+    hwaddr l;
+    uint8_t *ptr;
+    hwaddr addr1;
+    MemoryRegion *mr;
+    bool error = false;
+
+    while (len > 0) {
+        l = len;
+
+        mr = address_space_translate(as, addr, &addr1, &l, true);
+        if (!mr)
+            return true;
+
+        if (!memory_access_is_direct(mr, true)) {
+            abort();
+        } else {
+            addr1 += memory_region_get_ram_addr(mr);
+            /* RAM case */
+            ptr = qemu_get_ram_ptr(as->uc, addr1);
+            memset(ptr, memset_val, l);
+            invalidate_and_set_dirty(as->uc, addr1, l);
+        }
+        len -= l;
+        addr += l;
+    }
+
+    return error;
+}
+
 bool address_space_rw(AddressSpace *as, hwaddr addr, uint8_t *buf,
         int len, bool is_write)
 {
@@ -1588,7 +1621,7 @@ void address_space_unmap(AddressSpace *as, void *buffer, hwaddr len,
 {
     if (buffer != as->uc->bounce.buffer) {
         MemoryRegion *mr;
-        ram_addr_t addr1;
+        ram_addr_t addr1 = 0;
 
         mr = qemu_ram_addr_from_host(as->uc, buffer, &addr1);
         assert(mr != NULL);

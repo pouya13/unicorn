@@ -1,6 +1,12 @@
 /* Autogen header for Unicorn Engine - DONOT MODIFY */
 #ifndef UNICORN_AUTOGEN_X86_64_H
 #define UNICORN_AUTOGEN_X86_64_H
+#define fuzzer_init_cov fuzzer_init_cov_x86_64
+#define fuzzer_reset_cov fuzzer_reset_cov_x86_64
+#define cov_prev_loc cov_prev_loc_x86_64
+#define cov_area_ptr cov_area_ptr_x86_64
+#define cov_area_size cov_area_size_x86_64
+#define fw_log fw_log_x86_64
 #define arm_release arm_release_x86_64
 #define aarch64_tb_set_jmp_target aarch64_tb_set_jmp_target_x86_64
 #define ppc_tb_set_jmp_target ppc_tb_set_jmp_target_x86_64
@@ -67,6 +73,7 @@
 #define address_space_map address_space_map_x86_64
 #define address_space_read address_space_read_x86_64
 #define address_space_rw address_space_rw_x86_64
+#define address_space_memset address_space_memset_x86_64
 #define address_space_translate address_space_translate_x86_64
 #define address_space_translate_for_iotlb address_space_translate_for_iotlb_x86_64
 #define address_space_translate_internal address_space_translate_internal_x86_64
@@ -134,6 +141,7 @@
 #define arm_lduw_code arm_lduw_code_x86_64
 #define arm_log_exception arm_log_exception_x86_64
 #define arm_reg_read arm_reg_read_x86_64
+#define arm_reg_ptr arm_reg_ptr_x86_64
 #define arm_reg_reset arm_reg_reset_x86_64
 #define arm_reg_write arm_reg_write_x86_64
 #define restore_state_to_opc restore_state_to_opc_x86_64

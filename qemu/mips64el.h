@@ -1,6 +1,12 @@
 /* Autogen header for Unicorn Engine - DONOT MODIFY */
 #ifndef UNICORN_AUTOGEN_MIPS64EL_H
 #define UNICORN_AUTOGEN_MIPS64EL_H
+#define fuzzer_init_cov fuzzer_init_cov_mips64el
+#define fuzzer_reset_cov fuzzer_reset_cov_mips64el
+#define cov_prev_loc cov_prev_loc_mips64el
+#define cov_area_ptr cov_area_ptr_mips64el
+#define cov_area_size cov_area_size_mips64el
+#define fw_log fw_log_mips64el
 #define arm_release arm_release_mips64el
 #define aarch64_tb_set_jmp_target aarch64_tb_set_jmp_target_mips64el
 #define ppc_tb_set_jmp_target ppc_tb_set_jmp_target_mips64el
@@ -67,6 +73,7 @@
 #define address_space_map address_space_map_mips64el
 #define address_space_read address_space_read_mips64el
 #define address_space_rw address_space_rw_mips64el
+#define address_space_memset address_space_memset_mips64el
 #define address_space_translate address_space_translate_mips64el
 #define address_space_translate_for_iotlb address_space_translate_for_iotlb_mips64el
 #define address_space_translate_internal address_space_translate_internal_mips64el
@@ -134,6 +141,7 @@
 #define arm_lduw_code arm_lduw_code_mips64el
 #define arm_log_exception arm_log_exception_mips64el
 #define arm_reg_read arm_reg_read_mips64el
+#define arm_reg_ptr arm_reg_ptr_mips64el
 #define arm_reg_reset arm_reg_reset_mips64el
 #define arm_reg_write arm_reg_write_mips64el
 #define restore_state_to_opc restore_state_to_opc_mips64el

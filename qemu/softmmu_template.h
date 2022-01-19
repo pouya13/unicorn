@@ -265,8 +265,8 @@ WORD_TYPE helper_le_ld_name(CPUArchState *env, target_ulong addr, int mmu_idx,
     if (READ_ACCESS_TYPE == MMU_DATA_LOAD) {
         if (!uc->size_recur_mem) { // disabling read callback if in recursive call
             HOOK_FOREACH(uc, hook, UC_HOOK_MEM_READ) {
-              if (hook->to_delete)
-                  continue;
+              //if (hook->to_delete)
+              //    continue;
               if (!HOOK_BOUND_CHECK(hook, addr))
                     continue;
                 ((uc_cb_hookmem_t)hook->callback)(env->uc, UC_MEM_READ, addr, DATA_SIZE, 0, hook->user_data);

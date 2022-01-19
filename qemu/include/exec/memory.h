@@ -406,6 +406,19 @@ void address_space_destroy(AddressSpace *as);
 bool address_space_rw(AddressSpace *as, hwaddr addr, uint8_t *buf,
                       int len, bool is_write);
 
+ /**
+ * address_space_memset: set memory to a specific value in an address space.
+ *
+ * Return true if the operation hit any unassigned memory or encountered an
+ * IOMMU fault.
+ *
+ * @as: #AddressSpace to be accessed
+ * @addr: address within that address space
+ * @memset_val: value to set
+ * @len: size of region to memset
+ */
+bool address_space_memset(AddressSpace *as, hwaddr addr, uint8_t memset_val, int len);
+
 /**
  * address_space_write: write to address space.
  *

@@ -3,6 +3,7 @@
 #define UNICORN_COMMON_H_
 
 #include "tcg.h"
+#include "fuzzer/cov.h"
 
 // This header define common patterns/codes that will be included in all arch-sepcific
 // codes for unicorns purposes.
@@ -12,6 +13,12 @@ static inline bool cpu_physical_mem_read(AddressSpace *as, hwaddr addr,
                                             uint8_t *buf, int len)
 {
     return !cpu_physical_memory_rw(as, addr, (void *)buf, len, 0);
+}
+
+static inline bool cpu_physical_mem_set(AddressSpace *as, hwaddr addr,
+                                            const uint8_t val, int len)
+{
+    return !address_space_memset(as, addr, val, len);
 }
 
 static inline bool cpu_physical_mem_write(AddressSpace *as, hwaddr addr,
@@ -70,6 +77,7 @@ static void release_common(void *t)
 
 static inline void uc_common_init(struct uc_struct* uc)
 {
+    uc->set_mem = cpu_physical_mem_set;
     uc->write_mem = cpu_physical_mem_write;
     uc->read_mem = cpu_physical_mem_read;
     uc->tcg_enabled = tcg_enabled;
@@ -80,6 +88,8 @@ static inline void uc_common_init(struct uc_struct* uc)
     uc->memory_map_ptr = memory_map_ptr;
     uc->memory_unmap = memory_unmap;
     uc->readonly_mem = memory_region_set_readonly;
+    uc->fuzzer_init_cov = fuzzer_init_cov;
+    uc->fuzzer_reset_cov = fuzzer_reset_cov;
 
     uc->target_page_size = TARGET_PAGE_SIZE;
     uc->target_page_align = TARGET_PAGE_SIZE - 1;

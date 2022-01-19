@@ -152,6 +152,7 @@ static int sparc_cpus_init(struct uc_struct *uc, const char *cpu_model)
 DEFAULT_VISIBILITY
 void sparc_uc_init(struct uc_struct* uc)
 {
+    uc->reg_ptr = NULL;
     uc->release = sparc_release;
     uc->reg_read = sparc_reg_read;
     uc->reg_write = sparc_reg_write;

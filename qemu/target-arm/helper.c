@@ -2331,6 +2331,7 @@ static void define_debug_regs(ARMCPU *cpu)
     brps = extract32(cpu->dbgdidr, 24, 4);
     wrps = extract32(cpu->dbgdidr, 28, 4);
     ctx_cmps = extract32(cpu->dbgdidr, 20, 4);
+    ((void)ctx_cmps); // unused
 
     assert(ctx_cmps <= brps);
 
@@ -4330,9 +4331,11 @@ uint32_t HELPER(v7m_mrs)(CPUARMState *env, uint32_t reg)
     case 7: /* IEPSR */
         return xpsr_read(env) & 0x0700edff;
     case 8: /* MSP */
-        return env->v7m.current_sp ? env->v7m.other_sp : env->regs[13];
+        // return env->v7m.current_sp ? env->v7m.other_sp : env->regs[13];
+        return env->v7m.current_sp && spsel_read(env, NULL) ? env->v7m.other_sp : env->regs[13];
     case 9: /* PSP */
-        return env->v7m.current_sp ? env->regs[13] : env->v7m.other_sp;
+        // return env->v7m.current_sp ? env->regs[13] : env->v7m.other_sp;
+        return env->v7m.current_sp && spsel_read(env, NULL) ? env->regs[13] : env->v7m.other_sp;
     case 16: /* PRIMASK */
         return (env->daif & PSTATE_I) != 0;
     case 17: /* BASEPRI */
@@ -4376,13 +4379,15 @@ void HELPER(v7m_msr)(CPUARMState *env, uint32_t reg, uint32_t val)
         xpsr_write(env, val, 0x0600fc00);
         break;
     case 8: /* MSP */
-        if (env->v7m.current_sp)
+        // if (env->v7m.current_sp)
+        if (env->v7m.current_sp && spsel_read(env, NULL))
             env->v7m.other_sp = val;
         else
             env->regs[13] = val;
         break;
     case 9: /* PSP */
-        if (env->v7m.current_sp)
+        //if (env->v7m.current_sp)
+        if (env->v7m.current_sp && spsel_read(env, NULL))
             env->regs[13] = val;
         else
             env->v7m.other_sp = val;

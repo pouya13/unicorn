@@ -63,6 +63,7 @@ static TCGv_i64 cpu_exclusive_test;
 static TCGv_i32 cpu_exclusive_info;
 #endif
 
+#include "fuzzer/log.h"
 
 static const char *regnames[] =
     { "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7",
@@ -4160,12 +4161,14 @@ static void gen_nop_hint(DisasContext *s, int val)
 {
     switch (val) {
     case 3: /* wfi */
-        gen_set_pc_im(s, s->pc);
-        s->is_jmp = DISAS_WFI;
+        // We don't want the execution to halt upon a normal WFI instruction
+        //gen_set_pc_im(s, s->pc);
+        //s->is_jmp = DISAS_WFI;
         break;
     case 2: /* wfe */
-        gen_set_pc_im(s, s->pc);
-        s->is_jmp = DISAS_WFE;
+        // We don't want the execution to halt upon a normal WFE instruction
+        //gen_set_pc_im(s, s->pc);
+        //s->is_jmp = DISAS_WFE;
         break;
     case 4: /* sev */
     case 5: /* sevl */
@@ -7703,6 +7706,8 @@ static void disas_arm_insn(DisasContext *s, unsigned int insn)  // qq
         goto illegal_op;
     }
 
+    FW_ASSERT_NOT_REACHED("Not supported right now\n");
+
     // Unicorn: trace this instruction on request
     if (HOOK_EXISTS_BOUNDED(s->uc, UC_HOOK_CODE, s->pc - 4)) {
         gen_uc_tracecode(tcg_ctx, 4, UC_HOOK_CODE_IDX, s->uc, s->pc - 4);
@@ -10403,6 +10408,16 @@ illegal_op:
     return 1;
 }
 
+/* Sync the guest PC to the CPUARMState */
+static void sync_pc_to_cpustate(struct uc_struct *uc, TCGContext *tcg_ctx, uint64_t pc) {
+    TCGv_ptr ptr64 = tcg_const_ptr(tcg_ctx, &(((CPUARMState *)uc->cpu->env_ptr)->pc));
+    TCGv_ptr ptr32 = tcg_const_ptr(tcg_ctx, &(((CPUARMState *)uc->cpu->env_ptr)->regs[15]));
+    TCGv_i32 pc32 = tcg_const_i32(tcg_ctx, pc);
+    TCGv_i64 pc64 = tcg_const_i64(tcg_ctx, pc);
+    tcg_gen_st_i64(tcg_ctx, pc64, ptr64, 0);
+    tcg_gen_st_i32(tcg_ctx, pc32, ptr32, 0);
+}
+
 static void disas_thumb_insn(CPUARMState *env, DisasContext *s) // qq
 {
     TCGContext *tcg_ctx = s->uc->tcg_ctx;
@@ -10431,6 +10446,9 @@ static void disas_thumb_insn(CPUARMState *env, DisasContext *s) // qq
 
     insn = arm_lduw_code(env, s->pc, s->bswap_code);
 
+    /* Sync the current guest PC each instruction with the CpuState. */
+    sync_pc_to_cpustate(s->uc, tcg_ctx, s->pc);
+
     // Unicorn: trace this instruction on request
     if (HOOK_EXISTS_BOUNDED(s->uc, UC_HOOK_CODE, s->pc)) {
         // determine instruction size (Thumb/Thumb2)
@@ -10446,9 +10464,9 @@ static void disas_thumb_insn(CPUARMState *env, DisasContext *s) // qq
                 gen_uc_tracecode(tcg_ctx, 2, UC_HOOK_CODE_IDX, s->uc, s->pc);
                 break;
         }
-        // the callback might want to stop emulation immediately
-        check_exit_request(tcg_ctx);
     }
+    // the callback might want to stop emulation immediately
+    check_exit_request(tcg_ctx);
 
     s->pc += 2;
 
@@ -11264,15 +11282,18 @@ static inline void gen_intermediate_code_internal(ARMCPU *cpu,
         goto tb_end;
     }
 
-    // Unicorn: trace this block on request
-    // Only hook this block if it is not broken from previous translation due to
-    // full translation cache
-    if (!env->uc->block_full && HOOK_EXISTS_BOUNDED(env->uc, UC_HOOK_BLOCK, pc_start)) {
-        env->uc->size_arg = tcg_ctx->gen_opparam_buf - tcg_ctx->gen_opparam_ptr + 1;
-        gen_uc_tracecode(tcg_ctx, 0xf8f8f8f8, UC_HOOK_BLOCK_IDX, env->uc, pc_start);
-    } else {
-        env->uc->size_arg = -1;
+    sync_pc_to_cpustate(env->uc, tcg_ctx, tb->pc);
+
+    if (HOOK_EXISTS(env->uc, UC_HOOK_BLOCK_UNCONDITIONAL)) {
+        FW_LOG_DBG("Inserting uncondition block hook into " TARGET_FMT_lx "\n", pc_start);
+        gen_uc_unconditional_block(tcg_ctx, env->uc, pc_start);
     }
+    if (HOOK_EXISTS_BOUNDED(env->uc, UC_HOOK_BLOCK, pc_start)) {
+        FW_LOG_DBG("Inserting conditional block hook into " TARGET_FMT_lx "\n", pc_start);
+        gen_uc_tracecode_block(tcg_ctx, env->uc, pc_start);
+    }
+
+    /* Also generates TCG exit request check */
 
     gen_tb_start(tcg_ctx);
 

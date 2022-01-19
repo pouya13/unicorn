@@ -143,7 +143,8 @@ MACOS_UNIVERSAL ?= no
 ifeq ($(UNICORN_DEBUG),yes)
 CFLAGS += -g
 else
-CFLAGS += -O3
+CFLAGS += -O3 -g -DNDEBUG -march=native
+UNICORN_CFLAGS += -O3 -g -DNDEBUG -march=native
 UNICORN_QEMU_FLAGS += --disable-debug-info
 endif
 

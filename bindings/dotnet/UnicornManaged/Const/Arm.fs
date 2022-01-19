@@ -127,7 +127,13 @@ module Arm =
     let UC_ARM_REG_MSP = 115
     let UC_ARM_REG_PSP = 116
     let UC_ARM_REG_CONTROL = 117
-    let UC_ARM_REG_ENDING = 118
+    let UC_ARM_REG_XPSR = 118
+    let UC_ARM_REG_OTHER_SP = 119
+    let UC_ARM_REG_CURR_SP_MODE_IS_PSP = 120
+    let UC_ARM_REG_SPSEL = 121
+    let UC_ARM_REG_BASEPRI = 122
+    let UC_ARM_REG_PRIMASK = 123
+    let UC_ARM_REG_ENDING = 124
 
     // alias registers
     let UC_ARM_REG_R13 = 12

@@ -39,10 +39,13 @@
 typedef uc_err (*query_t)(struct uc_struct *uc, uc_query_type type, size_t *result);
 
 // return 0 on success, -1 on failure
+typedef int (*reg_ptr_t)(struct uc_struct *uc, unsigned int *regs, void ***vals, int count);
 typedef int (*reg_read_t)(struct uc_struct *uc, unsigned int *regs, void **vals, int count);
 typedef int (*reg_write_t)(struct uc_struct *uc, unsigned int *regs, void *const *vals, int count);
 
 typedef void (*reg_reset_t)(struct uc_struct *uc);
+
+typedef bool (*uc_set_mem_t)(AddressSpace *as, hwaddr addr, uint8_t val, int len);
 
 typedef bool (*uc_write_mem_t)(AddressSpace *as, hwaddr addr, const uint8_t *buf, int len);
 
@@ -58,6 +61,9 @@ typedef bool (*uc_args_tcg_enable_t)(struct uc_struct*);
 typedef void (*uc_args_uc_long_t)(struct uc_struct*, unsigned long);
 
 typedef void (*uc_args_uc_u64_t)(struct uc_struct *, uint64_t addr);
+
+typedef void (*uc_args_uc_ptr_uint_t)(struct uc_struct*, void *, uint32_t);
+typedef void (*uc_args_uc_int_t)(struct uc_struct*, int);
 
 typedef MemoryRegion* (*uc_args_uc_ram_size_t)(struct uc_struct*,  hwaddr begin, size_t size, uint32_t perms);
 
@@ -106,6 +112,7 @@ enum uc_hook_idx {
     UC_HOOK_MEM_FETCH_IDX,
     UC_HOOK_MEM_READ_AFTER_IDX,
     UC_HOOK_INSN_INVALID_IDX,
+    UC_HOOK_BLOCK_UNCONDITIONAL_IDX,
 
     UC_HOOK_MAX,
 };
@@ -149,10 +156,15 @@ struct uc_struct {
     uc_err errnum;  // qemu/cpu-exec.c
     AddressSpace as;
     query_t query;
+    reg_ptr_t reg_ptr;
     reg_read_t reg_read;
     reg_write_t reg_write;
     reg_reset_t reg_reset;
 
+    uc_args_uc_ptr_uint_t fuzzer_init_cov;
+    uc_args_uc_int_t fuzzer_reset_cov;
+
+    uc_set_mem_t set_mem;
     uc_write_mem_t write_mem;
     uc_read_mem_t read_mem;
     uc_args_void_t release;     // release resource when uc_close()

@@ -77,6 +77,7 @@ pub enum HookType {
     MEM_INVALID = 1008,
     MEM_VALID = 7168,
     MEM_ALL = 8176,
+    BLOCK_UNCONDITIONAL = 32768,
 }
 
 #[repr(C)]
@@ -119,35 +120,36 @@ pub enum Arch {
     MAX = 8,
 }
 
+// #[derive(PartialEq, Debug, Clone, Copy)]
+bitflags! {
 #[repr(C)]
-#[derive(PartialEq, Debug, Clone, Copy)]
-pub enum Mode {
+pub struct Mode : u32 {
+        const LITTLE_ENDIAN = 0;
+        const BIG_ENDIAN = 1073741824;
 
-    LITTLE_ENDIAN = 0,
-    BIG_ENDIAN = 1073741824,
-
-    // use LITTLE_ENDIAN.
-    // MODE_ARM = 0,
-    THUMB = 16,
-    MCLASS = 32,
-    V8 = 64,
-    ARM926 = 128,
-    ARM946 = 256,
-    ARM1176 = 512,
-    // (assoc) MICRO = 16,
-    // (assoc) MIPS3 = 32,
-    // (assoc) MIPS32R6 = 64,
-    MIPS32 = 4,
-    MIPS64 = 8,
-    MODE_16 = 2,
-    // (assoc) MODE_32 = 4,
-    // (assoc) MODE_64 = 8,
-    // (assoc) PPC32 = 4,
-    // (assoc) PPC64 = 8,
-    // (assoc) QPX = 16,
-    // (assoc) SPARC32 = 4,
-    // (assoc) SPARC64 = 8,
-    // (assoc) V9 = 16,
+        // use LITTLE_ENDIAN.
+        // MODE_ARM = 0;
+        const THUMB = 16;
+        const MCLASS = 32;
+        const V8 = 64;
+        const ARM926 = 128;
+        const ARM946 = 256;
+        const ARM1176 = 512;
+        // (assoc) MICRO = 16;
+        // (assoc) MIPS3 = 32;
+        // (assoc) MIPS32R6 = 64;
+        const MIPS32 = 4;
+        const MIPS64 = 8;
+        const MODE_16 = 2;
+        // (assoc) MODE_32 = 4;
+        // (assoc) MODE_64 = 8;
+        // (assoc) PPC32 = 4;
+        // (assoc) PPC64 = 8;
+        // (assoc) QPX = 16;
+        // (assoc) SPARC32 = 4;
+        // (assoc) SPARC64 = 8;
+        // (assoc) V9 = 16;
+    }
 }
 
 impl Mode {

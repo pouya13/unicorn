@@ -1,6 +1,12 @@
 /* Autogen header for Unicorn Engine - DONOT MODIFY */
 #ifndef UNICORN_AUTOGEN_PPC64_H
 #define UNICORN_AUTOGEN_PPC64_H
+#define fuzzer_init_cov fuzzer_init_cov_ppc64
+#define fuzzer_reset_cov fuzzer_reset_cov_ppc64
+#define cov_prev_loc cov_prev_loc_ppc64
+#define cov_area_ptr cov_area_ptr_ppc64
+#define cov_area_size cov_area_size_ppc64
+#define fw_log fw_log_ppc64
 #define arm_release arm_release_ppc64
 #define aarch64_tb_set_jmp_target aarch64_tb_set_jmp_target_ppc64
 #define ppc_tb_set_jmp_target ppc_tb_set_jmp_target_ppc64
@@ -67,6 +73,7 @@
 #define address_space_map address_space_map_ppc64
 #define address_space_read address_space_read_ppc64
 #define address_space_rw address_space_rw_ppc64
+#define address_space_memset address_space_memset_ppc64
 #define address_space_translate address_space_translate_ppc64
 #define address_space_translate_for_iotlb address_space_translate_for_iotlb_ppc64
 #define address_space_translate_internal address_space_translate_internal_ppc64
@@ -134,6 +141,7 @@
 #define arm_lduw_code arm_lduw_code_ppc64
 #define arm_log_exception arm_log_exception_ppc64
 #define arm_reg_read arm_reg_read_ppc64
+#define arm_reg_ptr arm_reg_ptr_ppc64
 #define arm_reg_reset arm_reg_reset_ppc64
 #define arm_reg_write arm_reg_write_ppc64
 #define restore_state_to_opc restore_state_to_opc_ppc64
@@ -656,6 +664,8 @@
 #define gen_helper_double_saturate gen_helper_double_saturate_ppc64
 #define gen_helper_exception_internal gen_helper_exception_internal_ppc64
 #define gen_helper_exception_with_syndrome gen_helper_exception_with_syndrome_ppc64
+#define gen_helper_float64_to_float32 gen_helper_float64_to_float32_ppc64
+#define gen_helper_float32_to_float64 gen_helper_float32_to_float64_ppc64
 #define gen_helper_get_cp_reg gen_helper_get_cp_reg_ppc64
 #define gen_helper_get_cp_reg64 gen_helper_get_cp_reg64_ppc64
 #define gen_helper_get_r13_banked gen_helper_get_r13_banked_ppc64
@@ -1376,6 +1386,8 @@
 #define helper_exception_internal helper_exception_internal_ppc64
 #define helper_exception_return helper_exception_return_ppc64
 #define helper_exception_with_syndrome helper_exception_with_syndrome_ppc64
+#define helper_float32_to_float64 helper_float32_to_float64_ppc64
+#define helper_float64_to_float32 helper_float64_to_float32_ppc64
 #define helper_get_cp_reg helper_get_cp_reg_ppc64
 #define helper_get_cp_reg64 helper_get_cp_reg64_ppc64
 #define helper_get_r13_banked helper_get_r13_banked_ppc64
@@ -2114,7 +2126,6 @@
 #define object_child_foreach object_child_foreach_ppc64
 #define object_class_foreach object_class_foreach_ppc64
 #define object_class_foreach_tramp object_class_foreach_tramp_ppc64
-#define object_class_get_list object_class_get_list_ppc64
 #define object_class_get_list_tramp object_class_get_list_tramp_ppc64
 #define object_class_get_parent object_class_get_parent_ppc64
 #define object_deinit object_deinit_ppc64
@@ -3017,4 +3028,6 @@
 #define xpsr_write xpsr_write_ppc64
 #define xscale_cpar_write xscale_cpar_write_ppc64
 #define xscale_cp_reginfo xscale_cp_reginfo_ppc64
+#define helper_fsqrt helper_fsqrt_ppc64
+#define helper_divs helper_divs_ppc64
 #endif

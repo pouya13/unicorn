@@ -2,6 +2,12 @@
 /* By Nguyen Anh Quynh <aquynh@gmail.com>, 2015 */
 /* Modified for Unicorn Engine by Chen Huitao<chenhuitao@hfmrit.com>, 2020 */
 
+#if defined(_MSC_VER)
+#define FUZZWARE_HOT /* No MSVC equivalent */
+#else
+#define FUZZWARE_HOT __attribute__((hot))
+#endif
+
 #if defined(UNICORN_HAS_OSXKERNEL)
 #include <libkern/libkern.h>
 #else
@@ -10,7 +16,7 @@
 #include <stdlib.h>
 #endif
 
-#include <time.h>   // nanosleep
+#include <time.h> // nanosleep
 
 #include <string.h>
 
@@ -26,10 +32,27 @@
 
 #include "qemu/include/qemu/queue.h"
 
+#if defined(FUZZWARE_FUZZING_STUBS)
+unsigned char *cov_area_ptr_arm;
+unsigned long cov_prev_loc_arm;
+unsigned long cov_area_size_arm;
+unsigned char *cov_area_ptr_armeb;
+unsigned long cov_prev_loc_armeb;
+unsigned long cov_area_size_armeb;
+
+void fuzzer_init_cov_arm(uc_engine *uc, void *bitmap_region, uint32_t bitmap_size) {}
+void fuzzer_reset_cov_arm(uc_engine *uc, int do_clear) {}
+void fw_log_arm(const int level, const char *frmt, ...) {}
+void fuzzer_init_cov_armeb(uc_engine *uc, void *bitmap_region, uint32_t bitmap_size) {}
+void fuzzer_reset_cov_armeb(uc_engine *uc, int do_clear) {}
+void fw_log_armeb(const int level, const char *frmt, ...) {}
+#endif
+
 UNICORN_EXPORT
 unsigned int uc_version(unsigned int *major, unsigned int *minor)
 {
-    if (major != NULL && minor != NULL) {
+    if (major != NULL && minor != NULL)
+    {
         *major = UC_API_MAJOR;
         *minor = UC_API_MINOR;
     }
@@ -37,105 +60,113 @@ unsigned int uc_version(unsigned int *major, unsigned int *minor)
     return (UC_API_MAJOR << 8) + UC_API_MINOR;
 }
 
-
 UNICORN_EXPORT
 uc_err uc_errno(uc_engine *uc)
 {
     return uc->errnum;
 }
 
-
 UNICORN_EXPORT
 const char *uc_strerror(uc_err code)
 {
-    switch(code) {
-        default:
-            return "Unknown error code";
-        case UC_ERR_OK:
-            return "OK (UC_ERR_OK)";
-        case UC_ERR_NOMEM:
-            return "No memory available or memory not present (UC_ERR_NOMEM)";
-        case UC_ERR_ARCH:
-            return "Invalid/unsupported architecture (UC_ERR_ARCH)";
-        case UC_ERR_HANDLE:
-            return "Invalid handle (UC_ERR_HANDLE)";
-        case UC_ERR_MODE:
-            return "Invalid mode (UC_ERR_MODE)";
-        case UC_ERR_VERSION:
-            return "Different API version between core & binding (UC_ERR_VERSION)";
-        case UC_ERR_READ_UNMAPPED:
-            return "Invalid memory read (UC_ERR_READ_UNMAPPED)";
-        case UC_ERR_WRITE_UNMAPPED:
-            return "Invalid memory write (UC_ERR_WRITE_UNMAPPED)";
-        case UC_ERR_FETCH_UNMAPPED:
-            return "Invalid memory fetch (UC_ERR_FETCH_UNMAPPED)";
-        case UC_ERR_HOOK:
-            return "Invalid hook type (UC_ERR_HOOK)";
-        case UC_ERR_INSN_INVALID:
-            return "Invalid instruction (UC_ERR_INSN_INVALID)";
-        case UC_ERR_MAP:
-            return "Invalid memory mapping (UC_ERR_MAP)";
-        case UC_ERR_WRITE_PROT:
-            return "Write to write-protected memory (UC_ERR_WRITE_PROT)";
-        case UC_ERR_READ_PROT:
-            return "Read from non-readable memory (UC_ERR_READ_PROT)";
-        case UC_ERR_FETCH_PROT:
-            return "Fetch from non-executable memory (UC_ERR_FETCH_PROT)";
-        case UC_ERR_ARG:
-            return "Invalid argument (UC_ERR_ARG)";
-        case UC_ERR_READ_UNALIGNED:
-            return "Read from unaligned memory (UC_ERR_READ_UNALIGNED)";
-        case UC_ERR_WRITE_UNALIGNED:
-            return "Write to unaligned memory (UC_ERR_WRITE_UNALIGNED)";
-        case UC_ERR_FETCH_UNALIGNED:
-            return "Fetch from unaligned memory (UC_ERR_FETCH_UNALIGNED)";
-        case UC_ERR_RESOURCE:
-            return "Insufficient resource (UC_ERR_RESOURCE)";
-        case UC_ERR_EXCEPTION:
-            return "Unhandled CPU exception (UC_ERR_EXCEPTION)";
+    switch (code)
+    {
+    default:
+        return "Unknown error code";
+    case UC_ERR_OK:
+        return "OK (UC_ERR_OK)";
+    case UC_ERR_NOMEM:
+        return "No memory available or memory not present (UC_ERR_NOMEM)";
+    case UC_ERR_ARCH:
+        return "Invalid/unsupported architecture (UC_ERR_ARCH)";
+    case UC_ERR_HANDLE:
+        return "Invalid handle (UC_ERR_HANDLE)";
+    case UC_ERR_MODE:
+        return "Invalid mode (UC_ERR_MODE)";
+    case UC_ERR_VERSION:
+        return "Different API version between core & binding (UC_ERR_VERSION)";
+    case UC_ERR_READ_UNMAPPED:
+        return "Invalid memory read (UC_ERR_READ_UNMAPPED)";
+    case UC_ERR_WRITE_UNMAPPED:
+        return "Invalid memory write (UC_ERR_WRITE_UNMAPPED)";
+    case UC_ERR_FETCH_UNMAPPED:
+        return "Invalid memory fetch (UC_ERR_FETCH_UNMAPPED)";
+    case UC_ERR_HOOK:
+        return "Invalid hook type (UC_ERR_HOOK)";
+    case UC_ERR_INSN_INVALID:
+        return "Invalid instruction (UC_ERR_INSN_INVALID)";
+    case UC_ERR_MAP:
+        return "Invalid memory mapping (UC_ERR_MAP)";
+    case UC_ERR_WRITE_PROT:
+        return "Write to write-protected memory (UC_ERR_WRITE_PROT)";
+    case UC_ERR_READ_PROT:
+        return "Read from non-readable memory (UC_ERR_READ_PROT)";
+    case UC_ERR_FETCH_PROT:
+        return "Fetch from non-executable memory (UC_ERR_FETCH_PROT)";
+    case UC_ERR_ARG:
+        return "Invalid argument (UC_ERR_ARG)";
+    case UC_ERR_READ_UNALIGNED:
+        return "Read from unaligned memory (UC_ERR_READ_UNALIGNED)";
+    case UC_ERR_WRITE_UNALIGNED:
+        return "Write to unaligned memory (UC_ERR_WRITE_UNALIGNED)";
+    case UC_ERR_FETCH_UNALIGNED:
+        return "Fetch from unaligned memory (UC_ERR_FETCH_UNALIGNED)";
+    case UC_ERR_RESOURCE:
+        return "Insufficient resource (UC_ERR_RESOURCE)";
+    case UC_ERR_EXCEPTION:
+        return "Unhandled CPU exception (UC_ERR_EXCEPTION)";
     }
 }
-
 
 UNICORN_EXPORT
 bool uc_arch_supported(uc_arch arch)
 {
-    switch (arch) {
+    switch (arch)
+    {
 #ifdef UNICORN_HAS_ARM
-        case UC_ARCH_ARM:   return true;
+    case UC_ARCH_ARM:
+        return true;
 #endif
 #ifdef UNICORN_HAS_ARM64
-        case UC_ARCH_ARM64: return true;
+    case UC_ARCH_ARM64:
+        return true;
 #endif
 #ifdef UNICORN_HAS_M68K
-        case UC_ARCH_M68K:  return true;
+    case UC_ARCH_M68K:
+        return true;
 #endif
 #ifdef UNICORN_HAS_MIPS
-        case UC_ARCH_MIPS:  return true;
+    case UC_ARCH_MIPS:
+        return true;
 #endif
 #ifdef UNICORN_HAS_PPC
-        case UC_ARCH_PPC:   return true;
+    case UC_ARCH_PPC:
+        return true;
 #endif
 #ifdef UNICORN_HAS_SPARC
-        case UC_ARCH_SPARC: return true;
+    case UC_ARCH_SPARC:
+        return true;
 #endif
 #ifdef UNICORN_HAS_X86
-        case UC_ARCH_X86:   return true;
+    case UC_ARCH_X86:
+        return true;
 #endif
-        /* Invalid or disabled arch */
-        default:            return false;
+    /* Invalid or disabled arch */
+    default:
+        return false;
     }
 }
-
 
 UNICORN_EXPORT
 uc_err uc_open(uc_arch arch, uc_mode mode, uc_engine **result)
 {
     struct uc_struct *uc;
 
-    if (arch < UC_ARCH_MAX) {
+    if (arch < UC_ARCH_MAX)
+    {
         uc = calloc(1, sizeof(*uc));
-        if (!uc) {
+        if (!uc)
+        {
             // memory insufficient
             return UC_ERR_NOMEM;
         }
@@ -154,121 +185,137 @@ uc_err uc_open(uc_arch arch, uc_mode mode, uc_engine **result)
         uc->address_spaces.tqh_first = NULL;
         uc->address_spaces.tqh_last = &uc->address_spaces.tqh_first;
 
-        switch(arch) {
-            default:
-                break;
+        switch (arch)
+        {
+        default:
+            break;
 #ifdef UNICORN_HAS_M68K
-            case UC_ARCH_M68K:
-                if ((mode & ~UC_MODE_M68K_MASK) ||
-                        !(mode & UC_MODE_BIG_ENDIAN)) {
-                    free(uc);
-                    return UC_ERR_MODE;
-                }
-                uc->init_arch = m68k_uc_init;
-                break;
+        case UC_ARCH_M68K:
+            if ((mode & ~UC_MODE_M68K_MASK) ||
+                !(mode & UC_MODE_BIG_ENDIAN))
+            {
+                free(uc);
+                return UC_ERR_MODE;
+            }
+            uc->init_arch = m68k_uc_init;
+            break;
 #endif
 #ifdef UNICORN_HAS_X86
-            case UC_ARCH_X86:
-                if ((mode & ~UC_MODE_X86_MASK) ||
-                        (mode & UC_MODE_BIG_ENDIAN) ||
-                        !(mode & (UC_MODE_16|UC_MODE_32|UC_MODE_64))) {
-                    free(uc);
-                    return UC_ERR_MODE;
-                }
-                uc->init_arch = x86_uc_init;
-                break;
+        case UC_ARCH_X86:
+            if ((mode & ~UC_MODE_X86_MASK) ||
+                (mode & UC_MODE_BIG_ENDIAN) ||
+                !(mode & (UC_MODE_16 | UC_MODE_32 | UC_MODE_64)))
+            {
+                free(uc);
+                return UC_ERR_MODE;
+            }
+            uc->init_arch = x86_uc_init;
+            break;
 #endif
 #ifdef UNICORN_HAS_ARM
-            case UC_ARCH_ARM:
-                if ((mode & ~UC_MODE_ARM_MASK)) {
-                    free(uc);
-                    return UC_ERR_MODE;
-                }
-                if (mode & UC_MODE_BIG_ENDIAN) {
-                    uc->init_arch = armeb_uc_init;
-                } else {
-                    uc->init_arch = arm_uc_init;
-                }
+        case UC_ARCH_ARM:
+            if ((mode & ~UC_MODE_ARM_MASK))
+            {
+                free(uc);
+                return UC_ERR_MODE;
+            }
+            if (mode & UC_MODE_BIG_ENDIAN)
+            {
+                uc->init_arch = armeb_uc_init;
+            }
+            else
+            {
+                uc->init_arch = arm_uc_init;
+            }
 
-                if (mode & UC_MODE_THUMB)
-                    uc->thumb = 1;
-                break;
+            if (mode & UC_MODE_THUMB)
+                uc->thumb = 1;
+            break;
 #endif
 #ifdef UNICORN_HAS_ARM64
-            case UC_ARCH_ARM64:
-                if (mode & ~UC_MODE_ARM_MASK) {
-                    free(uc);
-                    return UC_ERR_MODE;
-                }
-                if (mode & UC_MODE_BIG_ENDIAN) {
-                    uc->init_arch = arm64eb_uc_init;
-                } else {
-                    uc->init_arch = arm64_uc_init;
-                }
-                break;
+        case UC_ARCH_ARM64:
+            if (mode & ~UC_MODE_ARM_MASK)
+            {
+                free(uc);
+                return UC_ERR_MODE;
+            }
+            if (mode & UC_MODE_BIG_ENDIAN)
+            {
+                uc->init_arch = arm64eb_uc_init;
+            }
+            else
+            {
+                uc->init_arch = arm64_uc_init;
+            }
+            break;
 #endif
 
 #if defined(UNICORN_HAS_MIPS) || defined(UNICORN_HAS_MIPSEL) || defined(UNICORN_HAS_MIPS64) || defined(UNICORN_HAS_MIPS64EL)
-            case UC_ARCH_MIPS:
-                if ((mode & ~UC_MODE_MIPS_MASK) ||
-                        !(mode & (UC_MODE_MIPS32|UC_MODE_MIPS64))) {
-                    free(uc);
-                    return UC_ERR_MODE;
-                }
-                if (mode & UC_MODE_BIG_ENDIAN) {
+        case UC_ARCH_MIPS:
+            if ((mode & ~UC_MODE_MIPS_MASK) ||
+                !(mode & (UC_MODE_MIPS32 | UC_MODE_MIPS64)))
+            {
+                free(uc);
+                return UC_ERR_MODE;
+            }
+            if (mode & UC_MODE_BIG_ENDIAN)
+            {
 #ifdef UNICORN_HAS_MIPS
-                    if (mode & UC_MODE_MIPS32)
-                        uc->init_arch = mips_uc_init;
+                if (mode & UC_MODE_MIPS32)
+                    uc->init_arch = mips_uc_init;
 #endif
 #ifdef UNICORN_HAS_MIPS64
-                    if (mode & UC_MODE_MIPS64)
-                        uc->init_arch = mips64_uc_init;
+                if (mode & UC_MODE_MIPS64)
+                    uc->init_arch = mips64_uc_init;
 #endif
-                } else {    // little endian
+            }
+            else
+            { // little endian
 #ifdef UNICORN_HAS_MIPSEL
-                    if (mode & UC_MODE_MIPS32)
-                        uc->init_arch = mipsel_uc_init;
+                if (mode & UC_MODE_MIPS32)
+                    uc->init_arch = mipsel_uc_init;
 #endif
 #ifdef UNICORN_HAS_MIPS64EL
-                    if (mode & UC_MODE_MIPS64)
-                        uc->init_arch = mips64el_uc_init;
+                if (mode & UC_MODE_MIPS64)
+                    uc->init_arch = mips64el_uc_init;
 #endif
-                }
-                break;
+            }
+            break;
 #endif
 
 #ifdef UNICORN_HAS_SPARC
-            case UC_ARCH_SPARC:
-                if ((mode & ~UC_MODE_SPARC_MASK) ||
-                        !(mode & UC_MODE_BIG_ENDIAN) ||
-                        !(mode & (UC_MODE_SPARC32|UC_MODE_SPARC64))) {
-                    free(uc);
-                    return UC_ERR_MODE;
-                }
-                if (mode & UC_MODE_SPARC64)
-                    uc->init_arch = sparc64_uc_init;
-                else
-                    uc->init_arch = sparc_uc_init;
-                break;
+        case UC_ARCH_SPARC:
+            if ((mode & ~UC_MODE_SPARC_MASK) ||
+                !(mode & UC_MODE_BIG_ENDIAN) ||
+                !(mode & (UC_MODE_SPARC32 | UC_MODE_SPARC64)))
+            {
+                free(uc);
+                return UC_ERR_MODE;
+            }
+            if (mode & UC_MODE_SPARC64)
+                uc->init_arch = sparc64_uc_init;
+            else
+                uc->init_arch = sparc_uc_init;
+            break;
 #endif
 #ifdef UNICORN_HAS_PPC
-            case UC_ARCH_PPC:
-/*                if ((mode & ~UC_MODE_PPC_MASK) ||
+        case UC_ARCH_PPC:
+            /*                if ((mode & ~UC_MODE_PPC_MASK) ||
                         !(mode & UC_MODE_BIG_ENDIAN) ||
                         !(mode & (UC_MODE_PPC32|UC_MODE_PPC64))) {
                     free(uc);
                     return UC_ERR_MODE;
                 }*/
-                if (mode & UC_MODE_PPC64)
-                    uc->init_arch = /*ppc64_uc_init*/ppc_uc_init;		// No PPC64 yet!
-                else
-                    uc->init_arch = ppc_uc_init;
-                break;
+            if (mode & UC_MODE_PPC64)
+                uc->init_arch = /*ppc64_uc_init*/ ppc_uc_init; // No PPC64 yet!
+            else
+                uc->init_arch = ppc_uc_init;
+            break;
 #endif
-
         }
 
-        if (uc->init_arch == NULL) {
+        if (uc->init_arch == NULL)
+        {
             return UC_ERR_ARCH;
         }
 
@@ -281,11 +328,12 @@ uc_err uc_open(uc_arch arch, uc_mode mode, uc_engine **result)
             uc->reg_reset(uc);
 
         return UC_ERR_OK;
-    } else {
+    }
+    else
+    {
         return UC_ERR_ARCH;
     }
 }
-
 
 UNICORN_EXPORT
 uc_err uc_close(uc_engine *uc)
@@ -326,18 +374,22 @@ uc_err uc_close(uc_engine *uc)
     // Other auxilaries.
     free(uc->l1_map);
 
-    if (uc->bounce.buffer) {
+    if (uc->bounce.buffer)
+    {
         free(uc->bounce.buffer);
     }
 
     // free hooks and hook lists
-    for (i = 0; i < UC_HOOK_MAX; i++) {
+    for (i = 0; i < UC_HOOK_MAX; i++)
+    {
         cur = uc->hook[i].head;
         // hook can be in more than one list
         // so we refcount to know when to free
-        while (cur) {
+        while (cur)
+        {
             hook = (struct hook *)cur->data;
-            if (--hook->refs == 0) {
+            if (--hook->refs == 0)
+            {
                 free(hook);
             }
             cur = cur->next;
@@ -350,10 +402,9 @@ uc_err uc_close(uc_engine *uc)
     // finally, free uc itself.
     memset(uc, 0, sizeof(*uc));
     free(uc);
-    
+
     return UC_ERR_OK;
 }
-
 
 UNICORN_EXPORT
 uc_err uc_reg_read_batch(uc_engine *uc, int *ids, void **vals, int count)
@@ -361,11 +412,10 @@ uc_err uc_reg_read_batch(uc_engine *uc, int *ids, void **vals, int count)
     if (uc->reg_read)
         uc->reg_read(uc, (unsigned int *)ids, vals, count);
     else
-        return -1;  // FIXME: need a proper uc_err
+        return -1; // FIXME: need a proper uc_err
 
     return UC_ERR_OK;
 }
-
 
 UNICORN_EXPORT
 uc_err uc_reg_write_batch(uc_engine *uc, int *ids, void *const *vals, int count)
@@ -374,11 +424,21 @@ uc_err uc_reg_write_batch(uc_engine *uc, int *ids, void *const *vals, int count)
     if (uc->reg_write)
         ret = uc->reg_write(uc, (unsigned int *)ids, vals, count);
     else
-        return UC_ERR_EXCEPTION;  // FIXME: need a proper uc_err
+        return UC_ERR_EXCEPTION; // FIXME: need a proper uc_err
 
     return ret;
 }
 
+UNICORN_EXPORT
+uc_err uc_reg_ptr(uc_engine *uc, int regid, void **value)
+{
+    if (uc->reg_ptr)
+        uc->reg_ptr(uc, (unsigned int *)&regid, &value, 1);
+    else
+        return -1; // FIXME: need a proper uc_err
+
+    return UC_ERR_OK;
+}
 
 UNICORN_EXPORT
 uc_err uc_reg_read(uc_engine *uc, int regid, void *value)
@@ -398,19 +458,21 @@ static bool check_mem_area(uc_engine *uc, uint64_t address, size_t size)
 {
     size_t count = 0, len;
 
-    while(count < size) {
+    while (count < size)
+    {
         MemoryRegion *mr = memory_mapping(uc, address);
-        if (mr) {
+        if (mr)
+        {
             len = (size_t)MIN(size - count, mr->end - address);
             count += len;
             address += len;
-        } else  // this address is not mapped in yet
+        }
+        else // this address is not mapped in yet
             break;
     }
 
     return (count == size);
 }
-
 
 UNICORN_EXPORT
 uc_err uc_mem_read(uc_engine *uc, uint64_t address, void *_bytes, size_t size)
@@ -418,7 +480,8 @@ uc_err uc_mem_read(uc_engine *uc, uint64_t address, void *_bytes, size_t size)
     size_t count = 0, len;
     uint8_t *bytes = _bytes;
 
-    if (uc->mem_redirect) {
+    if (uc->mem_redirect)
+    {
         address = uc->mem_redirect(address);
     }
 
@@ -426,16 +489,19 @@ uc_err uc_mem_read(uc_engine *uc, uint64_t address, void *_bytes, size_t size)
         return UC_ERR_READ_UNMAPPED;
 
     // memory area can overlap adjacent memory blocks
-    while(count < size) {
+    while (count < size)
+    {
         MemoryRegion *mr = memory_mapping(uc, address);
-        if (mr) {
+        if (mr)
+        {
             len = (size_t)MIN(size - count, mr->end - address);
             if (uc->read_mem(&uc->as, address, bytes, len) == false)
                 break;
             count += len;
             address += len;
             bytes += len;
-        } else  // this address is not mapped in yet
+        }
+        else // this address is not mapped in yet
             break;
     }
 
@@ -446,12 +512,12 @@ uc_err uc_mem_read(uc_engine *uc, uint64_t address, void *_bytes, size_t size)
 }
 
 UNICORN_EXPORT
-uc_err uc_mem_write(uc_engine *uc, uint64_t address, const void *_bytes, size_t size)
+uc_err uc_mem_set(uc_engine *uc, uint64_t address, uint8_t value, size_t size)
 {
     size_t count = 0, len;
-    const uint8_t *bytes = _bytes;
 
-    if (uc->mem_redirect) {
+    if (uc->mem_redirect)
+    {
         address = uc->mem_redirect(address);
     }
 
@@ -459,9 +525,57 @@ uc_err uc_mem_write(uc_engine *uc, uint64_t address, const void *_bytes, size_t 
         return UC_ERR_WRITE_UNMAPPED;
 
     // memory area can overlap adjacent memory blocks
-    while(count < size) {
+    while (count < size)
+    {
         MemoryRegion *mr = memory_mapping(uc, address);
-        if (mr) {
+        if (mr)
+        {
+            uint32_t operms = mr->perms;
+            if (!(operms & UC_PROT_WRITE)) // write protected
+                // but this is not the program accessing memory, so temporarily mark writable
+                uc->readonly_mem(mr, false);
+
+            len = MIN(size - count, mr->end - address);
+            if (uc->set_mem(&uc->as, address, value, len) == false)
+                break;
+
+            if (!(operms & UC_PROT_WRITE)) // write protected
+                // now write protect it again
+                uc->readonly_mem(mr, true);
+
+            count += len;
+            address += len;
+        }
+        else // this address is not mapped in yet
+            break;
+    }
+
+    if (count == size)
+        return UC_ERR_OK;
+    else
+        return UC_ERR_WRITE_UNMAPPED;
+}
+
+UNICORN_EXPORT
+uc_err uc_mem_write(uc_engine *uc, uint64_t address, const void *_bytes, size_t size)
+{
+    size_t count = 0, len;
+    const uint8_t *bytes = _bytes;
+
+    if (uc->mem_redirect)
+    {
+        address = uc->mem_redirect(address);
+    }
+
+    if (!check_mem_area(uc, address, size))
+        return UC_ERR_WRITE_UNMAPPED;
+
+    // memory area can overlap adjacent memory blocks
+    while (count < size)
+    {
+        MemoryRegion *mr = memory_mapping(uc, address);
+        if (mr)
+        {
             uint32_t operms = mr->perms;
             if (!(operms & UC_PROT_WRITE)) // write protected
                 // but this is not the program accessing memory, so temporarily mark writable
@@ -478,7 +592,8 @@ uc_err uc_mem_write(uc_engine *uc, uint64_t address, const void *_bytes, size_t 
             count += len;
             address += len;
             bytes += len;
-        } else  // this address is not mapped in yet
+        }
+        else // this address is not mapped in yet
             break;
     }
 
@@ -488,21 +603,23 @@ uc_err uc_mem_write(uc_engine *uc, uint64_t address, const void *_bytes, size_t 
         return UC_ERR_WRITE_UNMAPPED;
 }
 
-#define TIMEOUT_STEP 2    // microseconds
+#define TIMEOUT_STEP 2 // microseconds
 static void *_timeout_fn(void *arg)
 {
     struct uc_struct *uc = arg;
     int64_t current_time = get_clock();
 
-    do {
+    do
+    {
         usleep(TIMEOUT_STEP);
         // perhaps emulation is even done before timeout?
         if (uc->emulation_done)
             break;
-    } while((uint64_t)(get_clock() - current_time) < uc->timeout);
+    } while ((uint64_t)(get_clock() - current_time) < uc->timeout);
 
     // timeout before emulation is done?
-    if (!uc->emulation_done) {
+    if (!uc->emulation_done)
+    {
         uc->timed_out = true;
         // force emulation to stop
         uc_emu_stop(uc);
@@ -515,7 +632,7 @@ static void enable_emu_timer(uc_engine *uc, uint64_t timeout)
 {
     uc->timeout = timeout;
     qemu_thread_create(uc, &uc->timer, "timeout", _timeout_fn,
-            uc, QEMU_THREAD_JOINABLE);
+                       uc, QEMU_THREAD_JOINABLE);
 }
 
 static void hook_count_cb(struct uc_struct *uc, uint64_t address, uint32_t size, void *user_data)
@@ -529,15 +646,19 @@ static void hook_count_cb(struct uc_struct *uc, uint64_t address, uint32_t size,
 
 static void clear_deleted_hooks(uc_engine *uc)
 {
-    struct list_item * cur;
-    struct hook * hook;
+    struct list_item *cur;
+    struct hook *hook;
     int i;
-    
-    for (cur = uc->hooks_to_del.head; cur != NULL && (hook = (struct hook *)cur->data); cur = cur->next) {
+
+    for (cur = uc->hooks_to_del.head; cur != NULL && (hook = (struct hook *)cur->data); cur = cur->next)
+    {
         assert(hook->to_delete);
-        for (i = 0; i < UC_HOOK_MAX; i++) {
-            if (list_remove(&uc->hook[i], (void *)hook)) {
-                if (--hook->refs == 0) {
+        for (i = 0; i < UC_HOOK_MAX; i++)
+        {
+            if (list_remove(&uc->hook[i], (void *)hook))
+            {
+                if (--hook->refs == 0)
+                {
                     free(hook);
                 }
 
@@ -551,7 +672,7 @@ static void clear_deleted_hooks(uc_engine *uc)
 }
 
 UNICORN_EXPORT
-uc_err uc_emu_start(uc_engine* uc, uint64_t begin, uint64_t until, uint64_t timeout, size_t count)
+uc_err uc_emu_start(uc_engine *uc, uint64_t begin, uint64_t until, uint64_t timeout, size_t count)
 {
     // reset the counter
     uc->emu_counter = 0;
@@ -561,86 +682,93 @@ uc_err uc_emu_start(uc_engine* uc, uint64_t begin, uint64_t until, uint64_t time
     uc->size_recur_mem = 0;
     uc->timed_out = false;
 
-    switch(uc->arch) {
-        default:
-            break;
+    switch (uc->arch)
+    {
+    default:
+        break;
 #ifdef UNICORN_HAS_M68K
-        case UC_ARCH_M68K:
-            uc_reg_write(uc, UC_M68K_REG_PC, &begin);
-            break;
+    case UC_ARCH_M68K:
+        uc_reg_write(uc, UC_M68K_REG_PC, &begin);
+        break;
 #endif
 #ifdef UNICORN_HAS_X86
-        case UC_ARCH_X86:
-            switch(uc->mode) {
-                default:
-                    break;
-                case UC_MODE_16: {
-                    uint64_t ip;
-                    uint16_t cs;
-
-                    uc_reg_read(uc, UC_X86_REG_CS, &cs);
-                    // compensate for later adding up IP & CS
-                    ip = begin - cs*16;
-                    uc_reg_write(uc, UC_X86_REG_IP, &ip);
-                    break;
-                }
-                case UC_MODE_32:
-                    uc_reg_write(uc, UC_X86_REG_EIP, &begin);
-                    break;
-                case UC_MODE_64:
-                    uc_reg_write(uc, UC_X86_REG_RIP, &begin);
-                    break;
-            }
+    case UC_ARCH_X86:
+        switch (uc->mode)
+        {
+        default:
             break;
+        case UC_MODE_16:
+        {
+            uint64_t ip;
+            uint16_t cs;
+
+            uc_reg_read(uc, UC_X86_REG_CS, &cs);
+            // compensate for later adding up IP & CS
+            ip = begin - cs * 16;
+            uc_reg_write(uc, UC_X86_REG_IP, &ip);
+            break;
+        }
+        case UC_MODE_32:
+            uc_reg_write(uc, UC_X86_REG_EIP, &begin);
+            break;
+        case UC_MODE_64:
+            uc_reg_write(uc, UC_X86_REG_RIP, &begin);
+            break;
+        }
+        break;
 #endif
 #ifdef UNICORN_HAS_ARM
-        case UC_ARCH_ARM:
-            uc_reg_write(uc, UC_ARM_REG_R15, &begin);
-            break;
+    case UC_ARCH_ARM:
+        uc_reg_write(uc, UC_ARM_REG_R15, &begin);
+        break;
 #endif
 #ifdef UNICORN_HAS_ARM64
-        case UC_ARCH_ARM64:
-            uc_reg_write(uc, UC_ARM64_REG_PC, &begin);
-            break;
+    case UC_ARCH_ARM64:
+        uc_reg_write(uc, UC_ARM64_REG_PC, &begin);
+        break;
 #endif
 #ifdef UNICORN_HAS_MIPS
-        case UC_ARCH_MIPS:
-            // TODO: MIPS32/MIPS64/BIGENDIAN etc
-            uc_reg_write(uc, UC_MIPS_REG_PC, &begin);
-            break;
+    case UC_ARCH_MIPS:
+        // TODO: MIPS32/MIPS64/BIGENDIAN etc
+        uc_reg_write(uc, UC_MIPS_REG_PC, &begin);
+        break;
 #endif
 #ifdef UNICORN_HAS_SPARC
-        case UC_ARCH_SPARC:
-            // TODO: Sparc/Sparc64
-            uc_reg_write(uc, UC_SPARC_REG_PC, &begin);
-            break;
+    case UC_ARCH_SPARC:
+        // TODO: Sparc/Sparc64
+        uc_reg_write(uc, UC_SPARC_REG_PC, &begin);
+        break;
 #endif
 #ifdef UNICORN_HAS_PPC
-        case UC_ARCH_PPC:
-            uc_reg_write(uc, UC_PPC_REG_PC, &begin);
-            break;
+    case UC_ARCH_PPC:
+        uc_reg_write(uc, UC_PPC_REG_PC, &begin);
+        break;
 #endif
     }
 
     uc->stop_request = false;
+    uc->exit_request = false;
 
     uc->emu_count = count;
     // remove count hook if counting isn't necessary
-    if (count <= 0 && uc->count_hook != 0) {
+    if (count <= 0 && uc->count_hook != 0)
+    {
         uc_hook_del(uc, uc->count_hook);
         uc->count_hook = 0;
     }
     // set up count hook to count instructions.
-    if (count > 0 && uc->count_hook == 0) {
+    if (count > 0 && uc->count_hook == 0)
+    {
         uc_err err;
         // callback to count instructions must be run before everything else,
         // so instead of appending, we must insert the hook at the begin
         // of the hook list
         uc->hook_insert = 1;
-        err = uc_hook_add(uc, &uc->count_hook, UC_HOOK_CODE, hook_count_cb, NULL, 1, 0);
+        err = uc_hook_add(uc, &uc->count_hook, UC_HOOK_BLOCK_UNCONDITIONAL, hook_count_cb, NULL, 1, 0);
         // restore to append mode for uc_hook_add()
         uc->hook_insert = 0;
-        if (err != UC_ERR_OK) {
+        if (err != UC_ERR_OK)
+        {
             return err;
         }
     }
@@ -648,9 +776,10 @@ uc_err uc_emu_start(uc_engine* uc, uint64_t begin, uint64_t until, uint64_t time
     uc->addr_end = until;
 
     if (timeout)
-        enable_emu_timer(uc, timeout * 1000);   // microseconds -> nanoseconds
+        enable_emu_timer(uc, timeout * 1000); // microseconds -> nanoseconds
 
-    if (uc->vm_start(uc)) {
+    if (uc->vm_start(uc))
+    {
         return UC_ERR_RESOURCE;
     }
 
@@ -660,7 +789,8 @@ uc_err uc_emu_start(uc_engine* uc, uint64_t begin, uint64_t until, uint64_t time
     // remove hooks to delete
     clear_deleted_hooks(uc);
 
-    if (timeout) {
+    if (timeout)
+    {
         // wait for the timer to finish
         qemu_thread_join(&uc->timer);
     }
@@ -668,16 +798,18 @@ uc_err uc_emu_start(uc_engine* uc, uint64_t begin, uint64_t until, uint64_t time
     return uc->invalid_error;
 }
 
-
 UNICORN_EXPORT
 uc_err uc_emu_stop(uc_engine *uc)
 {
     if (uc->emulation_done)
         return UC_ERR_OK;
 
+    uc->emulation_done = true;
+    uc->exit_request = true;
     uc->stop_request = true;
     // TODO: make this atomic somehow?
-    if (uc->cpu) {
+    if (uc->cpu)
+    {
         // exit the current TB
         cpu_exit(uc->cpu);
     }
@@ -691,7 +823,8 @@ static bool memory_overlap(struct uc_struct *uc, uint64_t begin, size_t size)
     unsigned int i;
     uint64_t end = begin + size - 1;
 
-    for(i = 0; i < uc->mapped_block_count; i++) {
+    for (i = 0; i < uc->mapped_block_count; i++)
+    {
         // begin address falls inside this region?
         if (begin >= uc->mapped_blocks[i]->addr && begin <= uc->mapped_blocks[i]->end - 1)
             return true;
@@ -717,10 +850,12 @@ static uc_err mem_map(uc_engine *uc, uint64_t address, size_t size, uint32_t per
     if (block == NULL)
         return UC_ERR_NOMEM;
 
-    if ((uc->mapped_block_count & (MEM_BLOCK_INCR - 1)) == 0) {  //time to grow
-        regions = (MemoryRegion**)g_realloc(uc->mapped_blocks,
-                sizeof(MemoryRegion*) * (uc->mapped_block_count + MEM_BLOCK_INCR));
-        if (regions == NULL) {
+    if ((uc->mapped_block_count & (MEM_BLOCK_INCR - 1)) == 0)
+    { //time to grow
+        regions = (MemoryRegion **)g_realloc(uc->mapped_blocks,
+                                             sizeof(MemoryRegion *) * (uc->mapped_block_count + MEM_BLOCK_INCR));
+        if (regions == NULL)
+        {
             return UC_ERR_NOMEM;
         }
         uc->mapped_blocks = regions;
@@ -755,7 +890,8 @@ static uc_err mem_map_check(uc_engine *uc, uint64_t address, size_t size, uint32
         return UC_ERR_ARG;
 
     // this area overlaps existing mapped regions?
-    if (memory_overlap(uc, address, size)) {
+    if (memory_overlap(uc, address, size))
+    {
         return UC_ERR_MAP;
     }
 
@@ -767,7 +903,8 @@ uc_err uc_mem_map(uc_engine *uc, uint64_t address, size_t size, uint32_t perms)
 {
     uc_err res;
 
-    if (uc->mem_redirect) {
+    if (uc->mem_redirect)
+    {
         address = uc->mem_redirect(address);
     }
 
@@ -786,7 +923,8 @@ uc_err uc_mem_map_ptr(uc_engine *uc, uint64_t address, size_t size, uint32_t per
     if (ptr == NULL)
         return UC_ERR_ARG;
 
-    if (uc->mem_redirect) {
+    if (uc->mem_redirect)
+    {
         address = uc->mem_redirect(address);
     }
 
@@ -802,9 +940,11 @@ uc_err uc_mem_map_ptr(uc_engine *uc, uint64_t address, size_t size, uint32_t per
 static uint8_t *copy_region(struct uc_struct *uc, MemoryRegion *mr)
 {
     uint8_t *block = (uint8_t *)g_malloc0((size_t)int128_get64(mr->size));
-    if (block != NULL) {
+    if (block != NULL)
+    {
         uc_err err = uc_mem_read(uc, mr->addr, block, (size_t)int128_get64(mr->size));
-        if (err != UC_ERR_OK) {
+        if (err != UC_ERR_OK)
+        {
             free(block);
             block = NULL;
         }
@@ -829,7 +969,7 @@ static uint8_t *copy_region(struct uc_struct *uc, MemoryRegion *mr)
 // TODO: investigate whether qemu region manipulation functions already offered
 // this capability
 static bool split_region(struct uc_struct *uc, MemoryRegion *mr, uint64_t address,
-        size_t size, bool do_delete)
+                         size_t size, bool do_delete)
 {
     uint8_t *backup;
     uint32_t perms;
@@ -853,22 +993,29 @@ static bool split_region(struct uc_struct *uc, MemoryRegion *mr, uint64_t addres
         // impossible case
         return false;
 
-    QTAILQ_FOREACH(block, &uc->ram_list.blocks, next) {
-        if (block->offset <= mr->addr && block->length >= (mr->end - mr->addr)) {
+    // see if we can trivially optimize backup performance here
+    QTAILQ_FOREACH(block, &uc->ram_list.blocks, next)
+    {
+        if (block->offset <= mr->addr && block->length >= (mr->end - mr->addr))
+        {
             break;
         }
     }
 
-    if (block == NULL)
-        return false;
-
-    // RAM_PREALLOC is not defined outside exec.c and I didn't feel like
-    // moving it
-	prealloc = !!(block->flags & 1);
-
-    if (block->flags & 1) {
-        backup = block->host;
+    if (block == NULL) {
+        prealloc = false;
     } else {
+        // RAM_PREALLOC is not defined outside exec.c and I didn't feel like
+        // moving it
+        prealloc = !!(block->flags & 1);
+    }
+
+    if (prealloc)
+    {
+        backup = block->host;
+    }
+    else
+    {
         backup = copy_region(uc, mr);
         if (backup == NULL)
             return false;
@@ -905,37 +1052,49 @@ static bool split_region(struct uc_struct *uc, MemoryRegion *mr, uint64_t addres
     // at that point to recover. Could try to remap orignal region, but these smaller
     // allocation just failed so no guarantee that we can recover the original
     // allocation at this point
-    if (l_size > 0) {
-        if (!prealloc) {
+    if (l_size > 0)
+    {
+        if (!prealloc)
+        {
             if (uc_mem_map(uc, begin, l_size, perms) != UC_ERR_OK)
                 goto error;
             if (uc_mem_write(uc, begin, backup, l_size) != UC_ERR_OK)
                 goto error;
-        } else {
+        }
+        else
+        {
             if (uc_mem_map_ptr(uc, begin, l_size, perms, backup) != UC_ERR_OK)
                 goto error;
         }
     }
 
-    if (m_size > 0 && !do_delete) {
-        if (!prealloc) {
+    if (m_size > 0 && !do_delete)
+    {
+        if (!prealloc)
+        {
             if (uc_mem_map(uc, address, m_size, perms) != UC_ERR_OK)
                 goto error;
             if (uc_mem_write(uc, address, backup + l_size, m_size) != UC_ERR_OK)
                 goto error;
-        } else {
+        }
+        else
+        {
             if (uc_mem_map_ptr(uc, address, m_size, perms, backup + l_size) != UC_ERR_OK)
                 goto error;
         }
     }
 
-    if (r_size > 0) {
-        if (!prealloc) {
+    if (r_size > 0)
+    {
+        if (!prealloc)
+        {
             if (uc_mem_map(uc, chunk_end, r_size, perms) != UC_ERR_OK)
                 goto error;
             if (uc_mem_write(uc, chunk_end, backup + l_size + m_size, r_size) != UC_ERR_OK)
                 goto error;
-        } else {
+        }
+        else
+        {
             if (uc_mem_map_ptr(uc, chunk_end, r_size, perms, backup + l_size + m_size) != UC_ERR_OK)
                 goto error;
         }
@@ -975,7 +1134,8 @@ uc_err uc_mem_protect(struct uc_struct *uc, uint64_t address, size_t size, uint3
     if ((perms & ~UC_PROT_ALL) != 0)
         return UC_ERR_ARG;
 
-    if (uc->mem_redirect) {
+    if (uc->mem_redirect)
+    {
         address = uc->mem_redirect(address);
     }
 
@@ -987,7 +1147,8 @@ uc_err uc_mem_protect(struct uc_struct *uc, uint64_t address, size_t size, uint3
     // We may need to split regions if this area spans adjacent regions
     addr = address;
     count = 0;
-    while(count < size) {
+    while (count < size)
+    {
         mr = memory_mapping(uc, addr);
         len = (size_t)MIN(size - count, mr->end - addr);
         if (!split_region(uc, mr, addr, len, false))
@@ -1005,7 +1166,8 @@ uc_err uc_mem_protect(struct uc_struct *uc, uint64_t address, size_t size, uint3
     }
 
     // if EXEC permission is removed, then quit TB and continue at the same place
-    if (remove_exec) {
+    if (remove_exec)
+    {
         uc->quit_request = true;
         uc_emu_stop(uc);
     }
@@ -1032,7 +1194,8 @@ uc_err uc_mem_unmap(struct uc_struct *uc, uint64_t address, size_t size)
     if ((size & uc->target_page_align) != 0)
         return UC_ERR_ARG;
 
-    if (uc->mem_redirect) {
+    if (uc->mem_redirect)
+    {
         address = uc->mem_redirect(address);
     }
 
@@ -1044,7 +1207,8 @@ uc_err uc_mem_unmap(struct uc_struct *uc, uint64_t address, size_t size)
     // We may need to split regions if this area spans adjacent regions
     addr = address;
     count = 0;
-    while(count < size) {
+    while (count < size)
+    {
         mr = memory_mapping(uc, addr);
         len = (size_t)MIN(size - count, mr->end - addr);
         if (!split_region(uc, mr, addr, len, true))
@@ -1054,7 +1218,7 @@ uc_err uc_mem_unmap(struct uc_struct *uc, uint64_t address, size_t size)
         // so unmap here
         mr = memory_mapping(uc, addr);
         if (mr != NULL)
-           uc->memory_unmap(uc, mr);
+            uc->memory_unmap(uc, mr);
         count += len;
         addr += len;
     }
@@ -1063,14 +1227,17 @@ uc_err uc_mem_unmap(struct uc_struct *uc, uint64_t address, size_t size)
 }
 
 // find the memory region of this address
-MemoryRegion *memory_mapping(struct uc_struct* uc, uint64_t address)
+FUZZWARE_HOT MemoryRegion *
+memory_mapping(struct uc_struct *uc, uint64_t address)
 {
-    unsigned int i;
+    int i;
+    MemoryRegion *mapping;
 
     if (uc->mapped_block_count == 0)
         return NULL;
 
-    if (uc->mem_redirect) {
+    if (uc->mem_redirect)
+    {
         address = uc->mem_redirect(address);
     }
 
@@ -1080,11 +1247,14 @@ MemoryRegion *memory_mapping(struct uc_struct* uc, uint64_t address)
     if (i < uc->mapped_block_count && address >= uc->mapped_blocks[i]->addr && address < uc->mapped_blocks[i]->end)
         return uc->mapped_blocks[i];
 
-    for(i = 0; i < uc->mapped_block_count; i++) {
-        if (address >= uc->mapped_blocks[i]->addr && address <= uc->mapped_blocks[i]->end - 1) {
+    for (i = uc->mapped_block_count - 1; i >= 0; i--)
+    {
+        mapping = uc->mapped_blocks[i];
+        if (address >= mapping->addr && address <= mapping->end - 1)
+        {
             // cache this index for the next query
             uc->mapped_block_cache_index = i;
-            return uc->mapped_blocks[i];
+            return mapping;
         }
     }
 
@@ -1094,13 +1264,14 @@ MemoryRegion *memory_mapping(struct uc_struct* uc, uint64_t address)
 
 UNICORN_EXPORT
 uc_err uc_hook_add(uc_engine *uc, uc_hook *hh, int type, void *callback,
-        void *user_data, uint64_t begin, uint64_t end, ...)
+                   void *user_data, uint64_t begin, uint64_t end, ...)
 {
     int ret = UC_ERR_OK;
     int i = 0;
 
     struct hook *hook = calloc(1, sizeof(struct hook));
-    if (hook == NULL) {
+    if (hook == NULL)
+    {
         return UC_ERR_NOMEM;
     }
 
@@ -1114,27 +1285,35 @@ uc_err uc_hook_add(uc_engine *uc, uc_hook *hh, int type, void *callback,
     *hh = (uc_hook)hook;
 
     // UC_HOOK_INSN has an extra argument for instruction ID
-    if (type & UC_HOOK_INSN) {
+    if (type & UC_HOOK_INSN)
+    {
         va_list valist;
 
         va_start(valist, end);
         hook->insn = va_arg(valist, int);
         va_end(valist);
 
-        if (uc->insn_hook_validate) {
-            if (! uc->insn_hook_validate(hook->insn)) {
+        if (uc->insn_hook_validate)
+        {
+            if (!uc->insn_hook_validate(hook->insn))
+            {
                 free(hook);
                 return UC_ERR_HOOK;
             }
         }
 
-        if (uc->hook_insert) {
-            if (list_insert(&uc->hook[UC_HOOK_INSN_IDX], hook) == NULL) {
+        if (uc->hook_insert)
+        {
+            if (list_insert(&uc->hook[UC_HOOK_INSN_IDX], hook) == NULL)
+            {
                 free(hook);
                 return UC_ERR_NOMEM;
             }
-        } else {
-            if (list_append(&uc->hook[UC_HOOK_INSN_IDX], hook) == NULL) {
+        }
+        else
+        {
+            if (list_append(&uc->hook[UC_HOOK_INSN_IDX], hook) == NULL)
+            {
                 free(hook);
                 return UC_ERR_NOMEM;
             }
@@ -1144,20 +1323,30 @@ uc_err uc_hook_add(uc_engine *uc, uc_hook *hh, int type, void *callback,
         return UC_ERR_OK;
     }
 
-    while ((type >> i) > 0) {
-        if ((type >> i) & 1) {
+    while ((type >> i) > 0)
+    {
+        if ((type >> i) & 1)
+        {
             // TODO: invalid hook error?
-            if (i < UC_HOOK_MAX) {
-                if (uc->hook_insert) {
-                    if (list_insert(&uc->hook[i], hook) == NULL) {
-                        if (hook->refs == 0) {
+            if (i < UC_HOOK_MAX)
+            {
+                if (uc->hook_insert)
+                {
+                    if (list_insert(&uc->hook[i], hook) == NULL)
+                    {
+                        if (hook->refs == 0)
+                        {
                             free(hook);
                         }
                         return UC_ERR_NOMEM;
                     }
-                } else {
-                    if (list_append(&uc->hook[i], hook) == NULL) {
-                        if (hook->refs == 0) {
+                }
+                else
+                {
+                    if (list_append(&uc->hook[i], hook) == NULL)
+                    {
+                        if (hook->refs == 0)
+                        {
                             free(hook);
                         }
                         return UC_ERR_NOMEM;
@@ -1171,13 +1360,13 @@ uc_err uc_hook_add(uc_engine *uc, uc_hook *hh, int type, void *callback,
 
     // we didn't use the hook
     // TODO: return an error?
-    if (hook->refs == 0) {
+    if (hook->refs == 0)
+    {
         free(hook);
     }
 
     return ret;
 }
-
 
 UNICORN_EXPORT
 uc_err uc_hook_del(uc_engine *uc, uc_hook hh)
@@ -1190,8 +1379,10 @@ uc_err uc_hook_del(uc_engine *uc, uc_hook hh)
     // which is less efficient
     // an optimization would be to align the hook pointer
     // and store the type mask in the hook pointer.
-    for (i = 0; i < UC_HOOK_MAX; i++) {
-        if (list_exists(&uc->hook[i], (void *) hook)) {
+    for (i = 0; i < UC_HOOK_MAX; i++)
+    {
+        if (list_exists(&uc->hook[i], (void *)hook))
+        {
             hook->to_delete = true;
             list_append(&uc->hooks_to_del, hook);
         }
@@ -1209,16 +1400,51 @@ void helper_uc_tracecode(int32_t size, uc_hook_type type, void *handle, int64_t 
     struct hook *hook;
 
     // sync PC in CPUArchState with address
-    if (uc->set_pc) {
+    if (uc->set_pc)
+    {
         uc->set_pc(uc, address);
     }
 
-    for (cur = uc->hook[type].head; cur != NULL && (hook = (struct hook *)cur->data); cur = cur->next) {
+    for (cur = uc->hook[type].head; cur != NULL && (hook = (struct hook *)cur->data); cur = cur->next)
+    {
         if (hook->to_delete)
             continue;
-        if (HOOK_BOUND_CHECK(hook, (uint64_t)address)) {
+        if (HOOK_BOUND_CHECK(hook, (uint64_t)address))
+        {
             ((uc_cb_hookcode_t)hook->callback)(uc, address, size, hook->user_data);
         }
+    }
+}
+
+void helper_uc_tracecode_block(void *handle, int64_t address);
+void helper_uc_tracecode_block(void *handle, int64_t address)
+{
+    struct uc_struct *uc = handle;
+    struct list_item *cur;
+    struct hook *hook;
+
+    for (cur = uc->hook[UC_HOOK_BLOCK_IDX].head; cur != NULL && (hook = (struct hook *)cur->data); cur = cur->next) {
+        if (hook->to_delete)
+            continue;
+        if (HOOK_BOUND_CHECK(hook, address)) {
+            ((uc_cb_hookcode_t)hook->callback)(uc, address, 0xfafafafa, hook->user_data);
+        }
+    }
+}
+
+void helper_uc_unconditional_block(void *handle, uint64_t address);
+FUZZWARE_HOT void helper_uc_unconditional_block(void *handle, uint64_t address)
+{
+    struct hook *hook;
+    struct uc_struct *uc = handle;
+
+    struct list_item *cur;
+    for (cur = uc->hook[UC_HOOK_BLOCK_UNCONDITIONAL_IDX].head; cur != NULL && unlikely(!uc->stop_request); cur = cur->next) {
+        // TODO: in unconditional hooks? please no...
+        //if (hook->to_delete)
+        //    continue;
+        hook = (struct hook *)cur->data;
+        ((uc_cb_hookcode_t)hook->callback)(uc, address, 0, hook->user_data);
     }
 }
 
@@ -1230,15 +1456,18 @@ uint32_t uc_mem_regions(uc_engine *uc, uc_mem_region **regions, uint32_t *count)
 
     *count = uc->mapped_block_count;
 
-    if (*count) {
+    if (*count)
+    {
         r = g_malloc0(*count * sizeof(uc_mem_region));
-        if (r == NULL) {
+        if (r == NULL)
+        {
             // out of memory
             return UC_ERR_NOMEM;
         }
     }
 
-    for (i = 0; i < *count; i++) {
+    for (i = 0; i < *count; i++)
+    {
         r[i].begin = uc->mapped_blocks[i]->addr;
         r[i].end = uc->mapped_blocks[i]->end - 1;
         r[i].perms = uc->mapped_blocks[i]->perms;
@@ -1252,29 +1481,31 @@ uint32_t uc_mem_regions(uc_engine *uc, uc_mem_region **regions, uint32_t *count)
 UNICORN_EXPORT
 uc_err uc_query(uc_engine *uc, uc_query_type type, size_t *result)
 {
-    switch(type) {
-        default:
-            return UC_ERR_ARG;
+    switch (type)
+    {
+    default:
+        return UC_ERR_ARG;
 
-        case UC_QUERY_PAGE_SIZE:
-            *result = uc->target_page_size;
-            break;
+    case UC_QUERY_PAGE_SIZE:
+        *result = uc->target_page_size;
+        break;
 
-        case UC_QUERY_ARCH:
-            *result = uc->arch;
-            break;
+    case UC_QUERY_ARCH:
+        *result = uc->arch;
+        break;
 
-        case UC_QUERY_MODE:
+    case UC_QUERY_MODE:
 #ifdef UNICORN_HAS_ARM
-            if (uc->arch == UC_ARCH_ARM) {
-                return uc->query(uc, type, result);
-            }
+        if (uc->arch == UC_ARCH_ARM)
+        {
+            return uc->query(uc, type, result);
+        }
 #endif
-            return UC_ERR_ARG;
+        return UC_ERR_ARG;
 
-        case UC_QUERY_TIMEOUT:
-            *result = uc->timed_out;
-            break;
+    case UC_QUERY_TIMEOUT:
+        *result = uc->timed_out;
+        break;
     }
 
     return UC_ERR_OK;
@@ -1285,39 +1516,55 @@ static size_t cpu_context_size(uc_arch arch, uc_mode mode)
     // each of these constants is defined by offsetof(CPUXYZState, tlb_table)
     // tbl_table is the first entry in the CPU_COMMON macro, so it marks the end
     // of the interesting CPU registers
-    switch (arch) {
+    switch (arch)
+    {
 #ifdef UNICORN_HAS_M68K
-        case UC_ARCH_M68K:  return M68K_REGS_STORAGE_SIZE;
+    case UC_ARCH_M68K:
+        return M68K_REGS_STORAGE_SIZE;
 #endif
 #ifdef UNICORN_HAS_X86
-        case UC_ARCH_X86:   return X86_REGS_STORAGE_SIZE;
+    case UC_ARCH_X86:
+        return X86_REGS_STORAGE_SIZE;
 #endif
 #ifdef UNICORN_HAS_ARM
-        case UC_ARCH_ARM:   return mode & UC_MODE_BIG_ENDIAN ? ARM_REGS_STORAGE_SIZE_armeb : ARM_REGS_STORAGE_SIZE_arm;
+    case UC_ARCH_ARM:
+        return mode & UC_MODE_BIG_ENDIAN ? ARM_REGS_STORAGE_SIZE_armeb : ARM_REGS_STORAGE_SIZE_arm;
 #endif
 #ifdef UNICORN_HAS_ARM64
-        case UC_ARCH_ARM64: return mode & UC_MODE_BIG_ENDIAN ? ARM64_REGS_STORAGE_SIZE_aarch64eb : ARM64_REGS_STORAGE_SIZE_aarch64;
+    case UC_ARCH_ARM64:
+        return mode & UC_MODE_BIG_ENDIAN ? ARM64_REGS_STORAGE_SIZE_aarch64eb : ARM64_REGS_STORAGE_SIZE_aarch64;
 #endif
 #ifdef UNICORN_HAS_MIPS
-        case UC_ARCH_MIPS:
-            if (mode & UC_MODE_MIPS64) {
-                if (mode & UC_MODE_BIG_ENDIAN) {
-                    return MIPS64_REGS_STORAGE_SIZE_mips64;
-                } else {
-                    return MIPS64_REGS_STORAGE_SIZE_mips64el;
-                }
-            } else {
-                if (mode & UC_MODE_BIG_ENDIAN) {
-                    return MIPS_REGS_STORAGE_SIZE_mips;
-                } else {
-                    return MIPS_REGS_STORAGE_SIZE_mipsel;
-                }
+    case UC_ARCH_MIPS:
+        if (mode & UC_MODE_MIPS64)
+        {
+            if (mode & UC_MODE_BIG_ENDIAN)
+            {
+                return MIPS64_REGS_STORAGE_SIZE_mips64;
             }
+            else
+            {
+                return MIPS64_REGS_STORAGE_SIZE_mips64el;
+            }
+        }
+        else
+        {
+            if (mode & UC_MODE_BIG_ENDIAN)
+            {
+                return MIPS_REGS_STORAGE_SIZE_mips;
+            }
+            else
+            {
+                return MIPS_REGS_STORAGE_SIZE_mipsel;
+            }
+        }
 #endif
 #ifdef UNICORN_HAS_SPARC
-        case UC_ARCH_SPARC: return mode & UC_MODE_SPARC64 ? SPARC64_REGS_STORAGE_SIZE : SPARC_REGS_STORAGE_SIZE;
+    case UC_ARCH_SPARC:
+        return mode & UC_MODE_SPARC64 ? SPARC64_REGS_STORAGE_SIZE : SPARC_REGS_STORAGE_SIZE;
 #endif
-        default: return 0;
+    default:
+        return 0;
     }
 }
 
@@ -1328,11 +1575,14 @@ uc_err uc_context_alloc(uc_engine *uc, uc_context **context)
     size_t size = cpu_context_size(uc->arch, uc->mode);
 
     *_context = malloc(size);
-    if (*_context) {
+    if (*_context)
+    {
         (*_context)->jmp_env_size = sizeof(*uc->cpu->jmp_env);
         (*_context)->context_size = size - sizeof(uc_context) - (*_context)->jmp_env_size;
         return UC_ERR_OK;
-    } else {
+    }
+    else
+    {
         return UC_ERR_NOMEM;
     }
 }
@@ -1366,5 +1616,19 @@ uc_err uc_context_restore(uc_engine *uc, uc_context *context)
     memcpy(uc->cpu->env_ptr, context->data, context->context_size);
     memcpy(uc->cpu->jmp_env, context->data + context->context_size, context->jmp_env_size);
 
+    return UC_ERR_OK;
+}
+
+UNICORN_EXPORT
+uc_err uc_fuzzer_init_cov(uc_engine *uc, void *bitmap_region, uint32_t bitmap_size)
+{
+    uc->fuzzer_init_cov(uc, bitmap_region, bitmap_size);
+    return UC_ERR_OK;
+}
+
+UNICORN_EXPORT
+uc_err uc_fuzzer_reset_cov(uc_engine *uc, int do_clear)
+{
+    uc->fuzzer_reset_cov(uc, do_clear);
     return UC_ERR_OK;
 }

@@ -251,6 +251,7 @@ void arm64eb_uc_init(struct uc_struct* uc)
 void arm64_uc_init(struct uc_struct* uc)
 #endif
 {
+    uc->reg_ptr = NULL;
     uc->reg_read = arm64_reg_read;
     uc->reg_write = arm64_reg_write;
     uc->reg_reset = arm64_reg_reset;

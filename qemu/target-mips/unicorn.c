@@ -165,6 +165,7 @@ DEFAULT_VISIBILITY
 #endif
 #endif
 {
+    uc->reg_ptr = NULL;
     uc->reg_read = mips_reg_read;
     uc->reg_write = mips_reg_write;
     uc->reg_reset = mips_reg_reset;

@@ -5,6 +5,7 @@
 #define UC_QEMU_TARGET_ARM_H
 
 // functions to read & write registers
+int arm_reg_ptr(struct uc_struct *uc, unsigned int *regs, void ***ptrs, int count);
 int arm_reg_read(struct uc_struct *uc, unsigned int *regs, void **vals, int count);
 int arm_reg_write(struct uc_struct *uc, unsigned int *regs, void *const *vals, int count);
 int arm64_reg_read(struct uc_struct *uc, unsigned int *regs, void **vals, int count);

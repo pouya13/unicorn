@@ -24,6 +24,9 @@
 
 #include "uc_priv.h"
 
+#include "tcg-op.h"
+#include "fuzzer/cov.h"
+
 static tcg_target_ulong cpu_tb_exec(CPUState *cpu, uint8_t *tb_ptr);
 static TranslationBlock *tb_find_slow(CPUArchState *env, target_ulong pc,
         target_ulong cs_base, uint64_t flags);
@@ -298,7 +301,7 @@ int cpu_exec(struct uc_struct *uc, CPUArchState *env)
     // Unicorn: flush JIT cache to because emulation might stop in
     // the middle of translation, thus generate incomplete code.
     // TODO: optimize this for better performance
-    tb_flush(env);
+    //tb_flush(env);
 
     /* fail safe : never use cpu outside cpu_exec() */
     // uc->cpu = NULL;

@@ -259,6 +259,8 @@ typedef enum uc_hook_type {
     UC_HOOK_MEM_READ_AFTER = 1 << 13,
     // Hook invalid instructions exceptions.
     UC_HOOK_INSN_INVALID = 1 << 14,
+    // Hook blocks unconditionally, ignoring the range modifier. Used to optimize hook invocation
+    UC_HOOK_BLOCK_UNCONDITIONAL = 1 << 15,
 } uc_hook_type;
 
 // Hook type for all events of unmapped memory access
@@ -435,6 +437,19 @@ uc_err uc_errno(uc_engine *uc);
 UNICORN_EXPORT
 const char *uc_strerror(uc_err code);
 
+ /*
+ Get internal pointer to register value.
+
+ @uc: handle returned by uc_open()
+ @regid:  register ID that is to be retrieved.
+ @value:  pointer to the variable that will hold the pointer to register @regid
+
+ @return UC_ERR_OK on success, or other value on failure (refer to uc_err enum
+   for detailed error).
+*/
+UNICORN_EXPORT
+uc_err uc_reg_ptr(uc_engine *uc, int regid, void **value);
+
 /*
  Write to register.
 
@@ -488,6 +503,19 @@ uc_err uc_reg_write_batch(uc_engine *uc, int *regs, void *const *vals, int count
 */
 UNICORN_EXPORT
 uc_err uc_reg_read_batch(uc_engine *uc, int *regs, void **vals, int count);
+
+/*
+ Writes a specific value (repeatedly) to a range of bytes in memory.
+
+ @uc: handle returned by uc_open()
+ @address: starting memory address of bytes to set.
+ @value: value to set
+ @size:   size of memory to write to.
+
+ @return UC_ERR_OK on success, or other value on failure (refer to uc_err enum
+   for detailed error).
+*/
+uc_err uc_mem_set(uc_engine *uc, uint64_t address, uint8_t value, size_t size);
 
 /*
  Write to a range of bytes in memory.
@@ -758,6 +786,31 @@ uc_err uc_context_restore(uc_engine *uc, uc_context *context);
 */
 UNICORN_EXPORT
 size_t uc_context_size(uc_engine *uc);
+
+/*
+  Initialize recording code coverage.
+
+  @uc: handle returned by uc_open()
+  @bitmap_region: the bitmap buffer to hold the bitmap
+  @bitmap_size: size of bitmap_region in bytes. The size is expected to be a power of 2 between 4kB to 64kB
+
+  @return UC_ERR_OK on success, or other value on failure (refer to uc_err enum
+   for detailed error).
+*/
+UNICORN_EXPORT
+uc_err uc_fuzzer_init_cov(uc_engine *uc, void *bitmap_region, uint32_t bitmap_size);
+
+/*
+  Reset coverage recording.
+
+  @uc: handle returned by uc_open()
+  @do_clear: If true, clears the bitmap to all zeroes.
+
+  @return UC_ERR_OK on success, or other value on failure (refer to uc_err enum
+   for detailed error).
+*/
+UNICORN_EXPORT
+uc_err uc_fuzzer_reset_cov(uc_engine *uc, int do_clear);
 
 #ifdef __cplusplus
 }

@@ -137,6 +137,14 @@ typedef enum uc_arm_reg {
     UC_ARM_REG_MSP,
     UC_ARM_REG_PSP,
     UC_ARM_REG_CONTROL,
+
+    // Fuzzware registers
+    UC_ARM_REG_XPSR,
+    UC_ARM_REG_OTHER_SP,
+    UC_ARM_REG_CURR_SP_MODE_IS_PSP,
+    UC_ARM_REG_SPSEL,
+    UC_ARM_REG_BASEPRI,
+    UC_ARM_REG_PRIMASK,
     UC_ARM_REG_ENDING,		// <-- mark the end of the list or registers
 
     //> alias registers

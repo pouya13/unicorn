@@ -119,6 +119,7 @@ static int m68k_cpus_init(struct uc_struct *uc, const char *cpu_model)
 DEFAULT_VISIBILITY
 void m68k_uc_init(struct uc_struct* uc)
 {
+    uc->reg_ptr = NULL;
     uc->release = m68k_release;
     uc->reg_read = m68k_reg_read;
     uc->reg_write = m68k_reg_write;
