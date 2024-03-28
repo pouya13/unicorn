@@ -298,6 +298,7 @@ class Uc(object):
         self._callbacks = {}
         self._ctype_cbs = {}
         self._callback_count = 0
+        self.memory_accesses = set()
         self._cleanup.register(self)
 
     @staticmethod
@@ -662,3 +663,4 @@ def debug():
     return "python-%s-c%u.%u-b%u.%u" % (
         all_archs, major, minor, uc.UC_API_MAJOR, uc.UC_API_MINOR
     )
+
